@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Breezi Server - Bảng Quản Trị & Cập Nhật File (Vercel Ready)</title>
+  <style>
+    :root {
+      --primary-gold: #e3a438;
+      --bg-dark: #0a0d14;
+      --card-bg: #131826;
+      --border-color: rgba(255, 255, 255, 0.1);
+      --text-main: #f8fafc;
+      --text-dim: #94a3b8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg-dark); color: var(--text-main); padding: 30px 20px; display: flex; justify-content: center; }
+    .container { width: 840px; max-width: 100%; display: flex; flex-direction: column; gap: 24px; }
+
+    .header-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px 28px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .badge-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    h1 { font-size: 20px; color: var(--primary-gold); }
+    .badge-vercel { font-size: 11px; background: #000; border: 1px solid #333; padding: 3px 8px; border-radius: 4px; color: #fff; font-weight: 600; }
+    p.desc { font-size: 13px; color: var(--text-dim); margin-bottom: 20px; line-height: 1.5; }
+
+    .status-badge { display: inline-block; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 13px; }
+    .status-ok { background: #064e3b; color: #34d399; border: 1px solid #059669; }
+    .status-maint { background: #78350f; color: #fbbf24; border: 1px solid #d97706; }
+    .status-update { background: #1e3a8a; color: #60a5fa; border: 1px solid #2563eb; }
+
+    .btn-group { display: flex; gap: 10px; margin: 20px 0; }
+    button.btn { flex: 1; padding: 12px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 13px; }
+    button.btn:hover { filter: brightness(1.15); transform: translateY(-1px); }
+    button.btn-ok { background: #10b981; color: #022c22; }
+    button.btn-maint { background: #f59e0b; color: #451a03; }
+    button.btn-update { background: #3b82f6; color: #eff6ff; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .field { margin-bottom: 14px; }
+    label { display: block; font-size: 12px; color: #cbd5e1; margin-bottom: 6px; font-weight: 600; }
+    input, textarea { width: 100%; background: #090c15; border: 1px solid #2d3748; border-radius: 6px; padding: 10px; color: #fff; font-size: 13px; outline: none; }
+    input:focus, textarea:focus { border-color: var(--primary-gold); }
+
+    /* Upload Section */
+    .upload-section {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px 28px;
+    }
+
+    .section-title { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; }
+    .tag-single { font-size: 11px; background: rgba(227, 164, 56, 0.15); border: 1px solid rgba(227, 164, 56, 0.4); color: #fad67b; padding: 2px 8px; border-radius: 4px; }
+
+    .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 18px; }
+    .upload-card {
+      background: #090c15;
+      border: 1.5px dashed #334155;
+      border-radius: 8px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: relative;
+      transition: border-color 0.2s;
+    }
+    .upload-card:hover { border-color: var(--primary-gold); }
+    .file-name-target { font-size: 14px; font-weight: bold; color: var(--primary-gold); }
+    .file-desc { font-size: 12px; color: var(--text-dim); }
+
+    .file-input-custom {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    input[type="file"] { display: none; }
+    .btn-choose {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid #475569;
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .selected-filename { font-size: 12px; color: #38bdf8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 180px; }
+
+    .progress-box {
+      width: 100%;
+      height: 6px;
+      background: #1e293b;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 4px;
+      display: none;
+    }
+    .progress-bar { width: 0%; height: 100%; background: linear-gradient(90deg, #3b82f6, #10b981); transition: width 0.15s ease; }
+    .progress-text { font-size: 11px; color: #94a3b8; display: flex; justify-content: space-between; }
+
+    .btn-upload {
+      background: linear-gradient(135deg, #f7d070, #e3a438);
+      border: none;
+      color: #0b0f19;
+      font-weight: 700;
+      padding: 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: opacity 0.2s;
+    }
+    .btn-upload:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Database Table */
+    .table-container {
+      margin-top: 20px;
+      border-top: 1px solid var(--border-color);
+      padding-top: 18px;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    th { text-align: left; padding: 10px; color: #94a3b8; border-bottom: 1px solid #334155; }
+    td { padding: 12px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .badge-latest { background: #064e3b; color: #34d399; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+    .btn-test-dl { background: transparent; border: 1px solid #3b82f6; color: #60a5fa; padding: 4px 10px; border-radius: 4px; font-size: 11.5px; text-decoration: none; display: inline-block; }
+    .btn-test-dl:hover { background: #1e3a8a; }
+
+    .toast { display: none; padding: 12px; border-radius: 6px; margin-top: 16px; text-align: center; font-size: 13px; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Server Status Control Card -->
+    <div class="header-card">
+      <div class="badge-row">
+        <h1>Breezi Auth & Update Server</h1>
+        <span class="badge-vercel">▲ Vercel Ready</span>
+      </div>
+      <p class="desc">
+        Hệ thống phân phối và xác thực khởi chạy Breezi Mod. Khi người dùng bấm PLAY trên Launcher, Launcher sẽ kiểm tra quyền với máy chủ này trước khi thực thi.
+      </p>
+
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 13px; color: var(--text-dim);">Trạng thái hiện tại:</span>
+        <span id="currentStatusBadge" class="status-badge status-ok">🟢 Đang tải...</span>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-ok" onclick="setStatus('ok')">1. Cho phép chơi (OK)</button>
+        <button class="btn btn-maint" onclick="setStatus('maintenance')">2. Đợi cập nhật mới (Bảo trì)</button>
+        <button class="btn btn-update" onclick="setStatus('update_available')">3. Có bản cập nhật mới</button>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label>Phiên bản mới nhất (Version)</label>
+          <input type="text" id="latestVersion" placeholder="v1.0.3">
+        </div>
+        <div class="field">
+          <label>Thông báo khi bảo trì (Maintenance Message)</label>
+          <input type="text" id="maintenanceMsg" placeholder="Máy chủ đang đợi bản cập nhật mới...">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Nội dung bản cập nhật mới (Changelog)</label>
+        <textarea id="changelog" rows="2" placeholder="Ghi chú cập nhật..."></textarea>
+      </div>
+
+      <button class="btn btn-ok" style="width: 100%;" onclick="saveMetadata()">Lưu thông tin tùy chỉnh</button>
+      <div id="toast" class="toast"></div>
+    </div>
+
+    <!-- Upload DLL & EXE Section -->
+    <div class="upload-section">
+      <div class="section-title">
+        <span>Tải lên File Mới Nhất vào Database</span>
+        <span class="tag-single">Chỉ lưu duy nhất bản mới nhất</span>
+      </div>
+      <p class="desc" style="margin-bottom: 0;">
+        Khi bạn tải lên file mới, hệ thống sẽ tự động dọn dẹp và xóa bản cũ trong cơ sở dữ liệu. Nhờ cơ chế cắt nhỏ (Chunked Upload), bạn có thể tải lên tệp 45MB mà không bị lỗi giới hạn 4.5MB của Vercel.
+      </p>
+
+      <div class="upload-grid">
+        <!-- Card 1: breezi.dll -->
+        <div class="upload-card" id="cardDll">
+          <div class="file-name-target">breezi.dll (~43.5 MB)</div>
+          <div class="file-desc">File DLL Mod menu tiêm vào tiến trình game</div>
+          <div class="file-input-custom">
+            <label class="btn-choose" for="fileDll">Chọn tệp .dll...</label>
+            <input type="file" id="fileDll" accept=".dll">
+            <span class="selected-filename" id="nameDll">Chưa chọn file</span>
+          </div>
+
+          <div class="progress-box" id="pboxDll"><div class="progress-bar" id="pbarDll"></div></div>
+          <div class="progress-text" id="ptextDll"><span></span><span></span></div>
+
+          <button class="btn-upload" id="btnUploadDll" onclick="startChunkedUpload('breezi.dll', 'fileDll', 'pboxDll', 'pbarDll', 'ptextDll', 'btnUploadDll')">
+            Tải lên & Lưu bản mới nhất
+          </button>
+        </div>
+
+        <!-- Card 2: breezi.exe -->
+        <div class="upload-card" id="cardExe">
+          <div class="file-name-target">breezi.exe (~1.17 MB)</div>
+          <div class="file-desc">File nạp mã Stealth Manual Mapper</div>
+          <div class="file-input-custom">
+            <label class="btn-choose" for="fileExe">Chọn tệp .exe...</label>
+            <input type="file" id="fileExe" accept=".exe">
+            <span class="selected-filename" id="nameExe">Chưa chọn file</span>
+          </div>
+
+          <div class="progress-box" id="pboxExe"><div class="progress-bar" id="pbarExe"></div></div>
+          <div class="progress-text" id="ptextExe"><span></span><span></span></div>
+
+          <button class="btn-upload" id="btnUploadExe" onclick="startChunkedUpload('breezi.exe', 'fileExe', 'pboxExe', 'pbarExe', 'ptextExe', 'btnUploadExe')">
+            Tải lên & Lưu bản mới nhất
+          </button>
+        </div>
+      </div>
+
+      <!-- Current Database Stored Files Table -->
+      <div class="table-container">
+        <div style="font-size: 14px; font-weight: 700; margin-bottom: 10px;">Các file đang lưu trong Database:</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Tên tệp</th>
+              <th>Dung lượng</th>
+              <th>Trạng thái lưu trữ</th>
+              <th>Ngày cập nhật</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="dbFilesList">
+            <tr><td colspan="5" style="text-align: center; color: var(--text-dim);">Đang tải dữ liệu database...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Kích thước mỗi chunk 2.5MB (an toàn trên giới hạn 4.5MB của Vercel Serverless)
+    const CHUNK_SIZE = 2.5 * 1024 * 1024;
+
+    // Load trạng thái ban đầu
+    async function loadStatus() {
+      try {
+        const res = await fetch('/api/status');
+        const data = await res.json();
+        renderBadge(data.status);
+        document.getElementById('latestVersion').value = data.latest_version || 'v1.0.3';
+        document.getElementById('maintenanceMsg').value = data.maintenance_message || '';
+        document.getElementById('changelog').value = data.changelog || '';
+        renderFilesTable(data.files || {});
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function renderBadge(status) {
+      const badge = document.getElementById('currentStatusBadge');
+      badge.className = 'status-badge ' + (status === 'ok' ? 'status-ok' : status === 'maintenance' ? 'status-maint' : 'status-update');
+      badge.textContent = status === 'ok' ? '🟢 1. Cho phép chơi (OK)' :
+                          status === 'maintenance' ? '🟡 2. Đợi cập nhật mới (Bảo trì)' :
+                          '🔵 3. Đã có bản cập nhật mới (Update Available)';
+    }
+
+    function renderFilesTable(files) {
+      const tbody = document.getElementById('dbFilesList');
+      const keys = ['breezi.dll', 'breezi.exe'];
+      let html = '';
+
+      keys.forEach(k => {
+        const f = files[k];
+        if (f) {
+          const sizeMb = (f.size / (1024 * 1024)).toFixed(2);
+          const dateStr = f.updated_at ? new Date(f.updated_at).toLocaleString('vi-VN') : 'Mặc định';
+          html += `
+            <tr>
+              <td style="font-weight: 600; color: #f8fafc;">${f.filename}</td>
+              <td style="color: #38bdf8;">${sizeMb} MB</td>
+              <td><span class="badge-latest">BẢN MỚI NHẤT</span></td>
+              <td style="color: #94a3b8;">${dateStr}</td>
+              <td><a href="/api/download?file=${f.filename}" class="btn-test-dl">Tải thử</a></td>
+            </tr>
+          `;
+        } else {
+          html += `
+            <tr>
+              <td style="font-weight: 600; color: #f8fafc;">${k}</td>
+              <td style="color: #94a3b8;">--</td>
+              <td style="color: #f59e0b;">Chưa có bản tải lên</td>
+              <td style="color: #94a3b8;">--</td>
+              <td>-</td>
+            </tr>
+          `;
+        }
+      });
+      tbody.innerHTML = html;
+    }
+
+    async function setStatus(status) {
+      await sendAdminUpdate({ status });
+    }
+
+    async function saveMetadata() {
+      const latest_version = document.getElementById('latestVersion').value.trim();
+      const maintenance_message = document.getElementById('maintenanceMsg').value.trim();
+      const changelog = document.getElementById('changelog').value.trim();
+      await sendAdminUpdate({ latest_version, maintenance_message, changelog });
+    }
+
+    async function sendAdminUpdate(payload) {
+      try {
+        const res = await fetch('/api/admin-status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Đã cập nhật trạng thái máy chủ thành công!');
+          renderBadge(data.config.status);
+          loadStatus();
+        }
+      } catch (e) {
+        showToast('Lỗi: ' + e.message, true);
+      }
+    }
+
+    // Hiển thị tên file khi chọn
+    document.getElementById('fileDll').addEventListener('change', (e) => {
+      const f = e.target.files[0];
+      document.getElementById('nameDll').textContent = f ? `${f.name} (${(f.size/1024/1024).toFixed(1)}MB)` : 'Chưa chọn';
+    });
+
+    document.getElementById('fileExe').addEventListener('change', (e) => {
+      const f = e.target.files[0];
+      document.getElementById('nameExe').textContent = f ? `${f.name} (${(f.size/1024/1024).toFixed(1)}MB)` : 'Chưa chọn';
+    });
+
+    // Chunked Upload Engine
+    async function startChunkedUpload(targetFilename, inputId, pboxId, pbarId, ptextId, btnId) {
+      const input = document.getElementById(inputId);
+      const file = input.files[0];
+      if (!file) {
+        alert(`Vui lòng chọn tệp ${targetFilename} trước khi tải lên!`);
+        return;
+      }
+
+      const pbox = document.getElementById(pboxId);
+      const pbar = document.getElementById(pbarId);
+      const ptext = document.getElementById(ptextId);
+      const btn = document.getElementById(btnId);
+
+      pbox.style.display = 'block';
+      pbar.style.width = '0%';
+      btn.disabled = true;
+      btn.textContent = 'Đang tải lên...';
+
+      const uploadId = 'up_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+      const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+      const latest_version = document.getElementById('latestVersion').value.trim();
+      const changelog = document.getElementById('changelog').value.trim();
+
+      try {
+        for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+          const start = chunkIndex * CHUNK_SIZE;
+          const end = Math.min(start + CHUNK_SIZE, file.size);
+          const chunkBlob = file.slice(start, end);
+
+          // Convert Blob to base64
+          const base64Data = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+              const res = reader.result;
+              resolve(res.substring(res.indexOf(',') + 1));
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(chunkBlob);
+          });
+
+          // Gửi chunk lên server
+          const chunkRes = await fetch('/api/upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'chunk',
+              uploadId,
+              chunkIndex,
+              totalChunks,
+              chunkData: base64Data
+            })
+          });
+
+          if (!chunkRes.ok) throw new Error(`Lỗi gửi chunk ${chunkIndex + 1}`);
+
+          const pct = Math.round(((chunkIndex + 1) / totalChunks) * 90);
+          pbar.style.width = pct + '%';
+          ptext.children[0].textContent = `Đang tải: Chunk ${chunkIndex + 1}/${totalChunks} (${(end/1024/1024).toFixed(1)}MB / ${(file.size/1024/1024).toFixed(1)}MB)`;
+          ptext.children[1].textContent = pct + '%';
+        }
+
+        // Bước cuối: Yêu cầu server ghép các chunk và lưu vào database
+        ptext.children[0].textContent = 'Đang ghép file và lưu vào database...';
+        const finalRes = await fetch('/api/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'assemble',
+            uploadId,
+            filename: targetFilename,
+            totalChunks,
+            newVersion: latest_version,
+            changelog: changelog
+          })
+        });
+
+        const finalData = await finalRes.json();
+        if (finalData.success) {
+          pbar.style.width = '100%';
+          ptext.children[0].textContent = 'Đã lưu bản mới nhất vào database!';
+          ptext.children[1].textContent = '100%';
+          showToast(`Đã lưu bản mới nhất của ${targetFilename} vào Database (Bản cũ đã xóa)!`);
+          loadStatus();
+        } else {
+          throw new Error(finalData.error || 'Ghép file thất bại');
+        }
+      } catch (err) {
+        alert('Lỗi tải lên: ' + err.message);
+        ptext.children[0].textContent = 'Lỗi tải lên';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Tải lên & Lưu bản mới nhất';
+      }
+    }
+
+    function showToast(msg, isError = false) {
+      const t = document.getElementById('toast');
+      t.style.display = 'block';
+      t.style.background = isError ? '#ef4444' : '#10b981';
+      t.style.color = '#fff';
+      t.textContent = msg;
+      setTimeout(() => { t.style.display = 'none'; }, 4000);
+    }
+
+    loadStatus();
+  </script>
+</body>
+</html>

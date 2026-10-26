@@ -1,0 +1,24 @@
+{
+  "port": 5000,
+  "status": "ok",
+  "latest_version": "v1.0.3",
+  "maintenance_message": "Máy chủ đang đợi bản cập nhật mới, hiện không thể vào game.",
+  "changelog": "Bản cập nhật v1.0.3 tối ưu hóa cho Vercel Serverless và Launcher",
+  "files": {
+    "breezi.dll": {
+      "filename": "breezi.dll",
+      "size": 45616128,
+      "sha256": "83c8601f25c67abc57a469f2618348998473639d89a570b54936ccf52932dad6",
+      "updated_at": "2026-10-26T19:01:07.437Z",
+      "download_url": "/api/download?file=breezi.dll"
+    },
+    "breezi.exe": {
+      "filename": "breezi.exe",
+      "size": 1225216,
+      "sha256": "57021178c007928e60f60a34cb047185fe095846acbc95f89792752a97130f72",
+      "updated_at": "2026-10-26T19:00:59.836Z",
+      "download_url": "/api/download?file=breezi.exe"
+    }
+  },
+  "updated_at": "2026-10-26T19:01:12.462Z"
+}

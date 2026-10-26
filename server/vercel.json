@@ -1,0 +1,28 @@
+{
+  "version": 2,
+  "functions": {
+    "api/upload.js": {
+      "memory": 1024,
+      "maxDuration": 60
+    },
+    "api/download.js": {
+      "memory": 1024,
+      "maxDuration": 60
+    }
+  },
+  "rewrites": [
+    { "source": "/api/download/:file", "destination": "/api/download?file=:file" },
+    { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/", "destination": "/admin.html" }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type" }
+      ]
+    }
+  ]
+}
