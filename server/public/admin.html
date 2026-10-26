@@ -15,8 +15,54 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: var(--bg-dark); color: var(--text-main); padding: 30px 20px; display: flex; justify-content: center; }
-    .container { width: 840px; max-width: 100%; display: flex; flex-direction: column; gap: 24px; }
+    body { background: var(--bg-dark); color: var(--text-main); min-height: 100vh; padding: 30px 20px; display: flex; justify-content: center; align-items: flex-start; }
+    
+    .container { width: 860px; max-width: 100%; display: flex; flex-direction: column; gap: 24px; }
+
+    /* Login View Modal / Box */
+    #loginView {
+      margin-top: 60px;
+      width: 440px;
+      max-width: 100%;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 36px 30px;
+      box-shadow: 0 15px 45px rgba(0,0,0,0.65);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      align-self: center;
+      position: relative;
+      overflow: hidden;
+    }
+    #loginView::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, #f7d070, #e3a438, #b45309);
+    }
+    .login-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--primary-gold);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+    .login-title { font-size: 21px; font-weight: 700; color: #fff; }
+    .login-desc { font-size: 13px; color: var(--text-dim); line-height: 1.5; margin-bottom: 8px; }
+    .login-error {
+      display: none;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #fca5a5;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 12.5px;
+      font-weight: 500;
+    }
 
     .header-card {
       background: var(--card-bg);
@@ -136,12 +182,48 @@
   </style>
 </head>
 <body>
-  <div class="container">
+
+  <!-- VIEW 1: ĐĂNG NHẬP QUẢN TRỊ VIÊN -->
+  <div id="loginView">
+    <div>
+      <span class="login-badge">Cổng Quản Trị Hệ Thống</span>
+      <h2 class="login-title">Đăng Nhập Admin</h2>
+    </div>
+    <p class="login-desc">Vui lòng đăng nhập bằng tài khoản quản trị viên để cập nhật trạng thái máy chủ và tải lên các tệp DLL / EXE mới nhất.</p>
+
+    <div id="loginError" class="login-error"></div>
+
+    <form id="loginForm" onsubmit="handleLoginSubmit(event)" style="display: flex; flex-direction: column; gap: 14px;">
+      <div class="field" style="margin-bottom: 0;">
+        <label>Tên đăng nhập (Username)</label>
+        <input type="text" id="loginUser" value="admin" required autocomplete="username">
+      </div>
+      <div class="field" style="margin-bottom: 0;">
+        <label>Mật khẩu (Password)</label>
+        <input type="password" id="loginPass" placeholder="Nhập mật khẩu..." required autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn btn-ok" id="btnLoginSubmit" style="margin-top: 6px;">Đăng Nhập Vào Hệ Thống</button>
+    </form>
+  </div>
+
+  <!-- VIEW 2: BẢNG ĐIỀU KHIỂN QUẢN TRỊ (CHỈ HIỆN KHI ĐÃ ĐĂNG NHẬP) -->
+  <div class="container" id="adminContainer" style="display: none;">
     <!-- Server Status Control Card -->
     <div class="header-card">
       <div class="badge-row">
-        <h1>Breezi Auth & Update Server</h1>
-        <span class="badge-vercel">▲ Vercel Ready</span>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <h1>Breezi Auth & Update Server</h1>
+          <span class="badge-vercel">▲ Vercel Ready</span>
+        </div>
+        <!-- Admin Profile Info & Logout -->
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="font-size: 12.5px; color: var(--primary-gold); background: rgba(227, 164, 56, 0.15); padding: 4px 10px; border-radius: 4px; border: 1px solid rgba(227, 164, 56, 0.3);">
+            👤 Tài khoản: <strong>admin</strong>
+          </span>
+          <button onclick="handleLogout()" style="background: transparent; border: 1px solid #ef4444; color: #f87171; padding: 4px 10px; border-radius: 4px; font-size: 11.5px; cursor: pointer; font-weight: 600;">
+            Đăng Xuất
+          </button>
+        </div>
       </div>
       <p class="desc">
         Hệ thống phân phối và xác thực khởi chạy Breezi Mod. Khi người dùng bấm PLAY trên Launcher, Launcher sẽ kiểm tra quyền với máy chủ này trước khi thực thi.
@@ -250,8 +332,75 @@
   <script>
     // Kích thước mỗi chunk 2.5MB (an toàn trên giới hạn 4.5MB của Vercel Serverless)
     const CHUNK_SIZE = 2.5 * 1024 * 1024;
+    const AUTH_KEY = 'breezi_admin_token';
 
-    // Load trạng thái ban đầu
+    // Helper lấy header Authorization
+    function getAuthHeaders() {
+      const token = localStorage.getItem(AUTH_KEY) || '';
+      return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      };
+    }
+
+    // Kiểm tra trạng thái đăng nhập
+    function checkAuth() {
+      const token = localStorage.getItem(AUTH_KEY);
+      const loginView = document.getElementById('loginView');
+      const adminContainer = document.getElementById('adminContainer');
+
+      if (token) {
+        loginView.style.display = 'none';
+        adminContainer.style.display = 'flex';
+        loadStatus();
+      } else {
+        loginView.style.display = 'flex';
+        adminContainer.style.display = 'none';
+      }
+    }
+
+    // Xử lý gửi form đăng nhập
+    async function handleLoginSubmit(e) {
+      e.preventDefault();
+      const user = document.getElementById('loginUser').value.trim();
+      const pass = document.getElementById('loginPass').value.trim();
+      const errBox = document.getElementById('loginError');
+      const btn = document.getElementById('btnLoginSubmit');
+
+      errBox.style.display = 'none';
+      btn.disabled = true;
+      btn.textContent = 'Đang xác thực...';
+
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: user, password: pass })
+        });
+        const data = await res.json();
+        if (res.ok && data.success && data.token) {
+          localStorage.setItem(AUTH_KEY, data.token);
+          checkAuth();
+        } else {
+          errBox.textContent = data.error || 'Tên đăng nhập hoặc mật khẩu không chính xác!';
+          errBox.style.display = 'block';
+        }
+      } catch (err) {
+        errBox.textContent = 'Lỗi kết nối đến máy chủ: ' + err.message;
+        errBox.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Đăng Nhập Vào Hệ Thống';
+      }
+    }
+
+    // Đăng xuất
+    function handleLogout() {
+      localStorage.removeItem(AUTH_KEY);
+      location.reload();
+    }
+
+    // Load trạng thái máy chủ
     async function loadStatus() {
       try {
         const res = await fetch('/api/status');
@@ -323,14 +472,21 @@
       try {
         const res = await fetch('/api/admin-status', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: getAuthHeaders(),
           body: JSON.stringify(payload)
         });
+        if (res.status === 401) {
+          showToast('Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại!', true);
+          setTimeout(handleLogout, 1500);
+          return;
+        }
         const data = await res.json();
         if (data.success) {
           showToast('Đã cập nhật trạng thái máy chủ thành công!');
           renderBadge(data.config.status);
           loadStatus();
+        } else {
+          showToast(data.error || 'Lỗi cập nhật', true);
         }
       } catch (e) {
         showToast('Lỗi: ' + e.message, true);
@@ -348,7 +504,7 @@
       document.getElementById('nameExe').textContent = f ? `${f.name} (${(f.size/1024/1024).toFixed(1)}MB)` : 'Chưa chọn';
     });
 
-    // Chunked Upload Engine
+    // Chunked Upload Engine với xác thực Admin
     async function startChunkedUpload(targetFilename, inputId, pboxId, pbarId, ptextId, btnId) {
       const input = document.getElementById(inputId);
       const file = input.files[0];
@@ -389,10 +545,10 @@
             reader.readAsDataURL(chunkBlob);
           });
 
-          // Gửi chunk lên server
+          // Gửi chunk lên server kèm Authorization header
           const chunkRes = await fetch('/api/upload', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: getAuthHeaders(),
             body: JSON.stringify({
               action: 'chunk',
               uploadId,
@@ -402,6 +558,9 @@
             })
           });
 
+          if (chunkRes.status === 401) {
+            throw new Error('Chưa đăng nhập hoặc phiên làm việc đã hết hạn!');
+          }
           if (!chunkRes.ok) throw new Error(`Lỗi gửi chunk ${chunkIndex + 1}`);
 
           const pct = Math.round(((chunkIndex + 1) / totalChunks) * 90);
@@ -414,7 +573,7 @@
         ptext.children[0].textContent = 'Đang ghép file và lưu vào database...';
         const finalRes = await fetch('/api/upload', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: getAuthHeaders(),
           body: JSON.stringify({
             action: 'assemble',
             uploadId,
@@ -424,6 +583,10 @@
             changelog: changelog
           })
         });
+
+        if (finalRes.status === 401) {
+          throw new Error('Chưa đăng nhập hoặc phiên làm việc đã hết hạn!');
+        }
 
         const finalData = await finalRes.json();
         if (finalData.success) {
@@ -453,7 +616,8 @@
       setTimeout(() => { t.style.display = 'none'; }, 4000);
     }
 
-    loadStatus();
+    // Khởi chạy kiểm tra xác thực
+    checkAuth();
   </script>
 </body>
 </html>

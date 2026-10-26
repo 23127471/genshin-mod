@@ -13,6 +13,7 @@ const handlePlayRequest = require('./api/play-request');
 const handleDownload = require('./api/download');
 const handleUpload = require('./api/upload');
 const handleAdminStatus = require('./api/admin-status');
+const handleLogin = require('./api/login');
 
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
@@ -95,6 +96,11 @@ const server = http.createServer(async (req, res) => {
   // 6. API: Quản trị viên cập nhật trạng thái (POST /api/admin-status hoặc POST /api/admin/set-status)
   if (pathname === '/api/admin-status' || pathname === '/api/admin/set-status') {
     return handleAdminStatus(req, res);
+  }
+
+  // 7. API: Đăng nhập quản trị viên (POST /api/login)
+  if (pathname === '/api/login') {
+    return handleLogin(req, res);
   }
 
   // Fallback 404

@@ -123,14 +123,14 @@ const api = {
     if (window.electronAPI && window.electronAPI.checkServerStatus) {
       return await window.electronAPI.checkServerStatus();
     }
-    const res = await fetch('http://127.0.0.1:5000/api/status');
+    const res = await fetch('https://genshin-mod.vercel.app/api/status');
     return await res.json();
   },
   async requestPlay() {
     if (window.electronAPI && window.electronAPI.requestPlay) {
       return await window.electronAPI.requestPlay();
     }
-    const res = await fetch('http://127.0.0.1:5000/api/play-request', {
+    const res = await fetch('https://genshin-mod.vercel.app/api/play-request', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ version: 'v1.0.2' })

@@ -26,7 +26,7 @@ function readConfig() {
   const cfgPath = getConfigPath();
   const config = {
     GamePath: '',
-    ServerUrl: 'http://127.0.0.1:5000',
+    ServerUrl: 'https://genshin-mod.vercel.app',
     AutoMinimize: 'true',
     BackgroundImage: 'https://raw.githubusercontent.com/Zeal-L/Honkai-Star-Rail-Wallpaper/main/Offcial/1313143.jpg',
     BackgroundVideo: 'https://raw.githubusercontent.com/adiambassador/wallpapers/main/honkai/march-7th-honkai-star-rail-adventure.1920x1080.mp4',
@@ -93,7 +93,7 @@ function writeConfig(data) {
     `GamePath=${updated.GamePath || ''}`,
     '',
     `; Địa chỉ máy chủ xác thực và cập nhật`,
-    `ServerUrl=${updated.ServerUrl || 'http://127.0.0.1:5000'}`,
+    `ServerUrl=${updated.ServerUrl || 'https://genshin-mod.vercel.app'}`,
     '',
     `; Tự động thu nhỏ launcher khi bấm Play (true / false)`,
     `AutoMinimize=${updated.AutoMinimize === 'true' || updated.AutoMinimize === true ? 'true' : 'false'}`,
@@ -282,7 +282,7 @@ ipcMain.handle('close-window', () => {
 // 1. Kiểm tra trạng thái máy chủ
 ipcMain.handle('check-server-status', async () => {
   const config = readConfig();
-  const serverUrl = (config.ServerUrl || 'http://127.0.0.1:5000').replace(/\/+$/, '');
+  const serverUrl = (config.ServerUrl || 'https://genshin-mod.vercel.app').replace(/\/+$/, '');
   try {
     const res = await fetch(`${serverUrl}/api/status`, { signal: AbortSignal.timeout(3000) });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -296,7 +296,7 @@ ipcMain.handle('check-server-status', async () => {
 // 2. Gửi yêu cầu quyền chơi game đến máy chủ
 ipcMain.handle('request-play', async () => {
   const config = readConfig();
-  const serverUrl = (config.ServerUrl || 'http://127.0.0.1:5000').replace(/\/+$/, '');
+  const serverUrl = (config.ServerUrl || 'https://genshin-mod.vercel.app').replace(/\/+$/, '');
   try {
     const res = await fetch(`${serverUrl}/api/play-request`, {
       method: 'POST',
@@ -318,7 +318,7 @@ ipcMain.handle('request-play', async () => {
 // 3. Tải bản cập nhật mới nhất (breezi.dll và breezi.exe)
 ipcMain.handle('download-update', async () => {
   const config = readConfig();
-  const serverUrl = (config.ServerUrl || 'http://127.0.0.1:5000').replace(/\/+$/, '');
+  const serverUrl = (config.ServerUrl || 'https://genshin-mod.vercel.app').replace(/\/+$/, '');
   const libDir = getLibDir();
   const filesToDownload = ['breezi.dll', 'breezi.exe'];
 

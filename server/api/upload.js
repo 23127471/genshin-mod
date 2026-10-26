@@ -1,10 +1,11 @@
 const { saveChunk, assembleChunks, saveLatestFile, getDatabase, saveDatabase } = require('../lib/db');
+const { checkAdminAuth } = require('../lib/auth');
 
 module.exports = async (req, res) => {
   // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-admin-token');
 
   if (req.method === 'OPTIONS') {
     res.status(204).end();
@@ -27,6 +28,12 @@ module.exports = async (req, res) => {
         try { resolve(JSON.parse(data)); } catch (_) { resolve({}); }
       });
     });
+  }
+
+  // Kiểm tra xác thực quyền Admin
+  if (!checkAdminAuth(req, body)) {
+    res.status(401).json({ success: false, error: 'Chưa đăng nhập hoặc phiên làm việc đã hết hạn!' });
+    return;
   }
 
   const { action, uploadId, filename, chunkIndex, totalChunks, chunkData, newVersion, changelog } = body;
