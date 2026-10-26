@@ -1,57 +1,38 @@
 ================================================================================
                BREEZI LAUNCHER - GENSHIN IMPACT MOD v1.0.2 x TẤN CUTOS
+                           (BẢN PHÁT HÀNH WINDOWS 10 / 11)
 ================================================================================
 
-Chào mừng bạn đến với bộ cài đặt Breezi Launcher!
-Gói này đã được tối ưu hóa toàn diện để bạn có thể mở và sử dụng ngay lập tức mà
-không cần cấu hình phức tạp.
+Bộ phát hành này dành riêng cho hệ điều hành Windows, bao gồm đầy đủ tệp thực thi
+và công cụ cần thiết để bạn chạy mod ngay mà không cần cài đặt thêm bất kỳ thứ gì.
 
 --------------------------------------------------------------------------------
-1. CÁCH KHỞI CHẠY LAUNCHER (SIÊU NHANH)
+1. CÁCH KHỞI CHẠY LAUNCHER
 --------------------------------------------------------------------------------
-Bạn có thể khởi chạy bằng 1 trong 2 cách sau:
+Bạn chỉ cần nhấp đúp chuột vào:
 
-- Cách 1 (Khuyên dùng): Nhấp đúp chuột vào file:
-    Breezi_Launcher.vbs
-  (Khởi động ngầm tức thì, không hiện cửa sổ dòng lệnh đen)
+    Breezi_Launcher.exe   (hoặc Start_Launcher.bat)
 
-- Cách 2: Nhấp đúp chuột vào file:
-    Breezi_Launcher.bat
-  (Hiển thị tiến trình khởi chạy và tự động tìm môi trường tối ưu nhất)
-
-* Hệ thống tự động tối ưu hóa tốc độ khởi chạy (< 0.2s) trên mọi máy tính Windows 10/11
-  thông qua Microsoft Edge App Window hoặc Python / Electron.
+* Launcher sẽ tự động mở lên trong vòng < 0.2 giây với giao diện mượt mà,
+  phát video nền và đầy đủ tính năng cấu hình.
 
 --------------------------------------------------------------------------------
-2. CÁCH CÀI ĐẶT ĐƯỜNG DẪN GAME
+2. CÀI ĐẶT ĐƯỜNG DẪN GAME
 --------------------------------------------------------------------------------
-- Lần đầu mở Launcher, bạn bấm vào biểu tượng bánh răng (⚙) ở góc trên bên phải.
-- Bấm nút "Chọn tệp game (.exe)..." và trỏ đến tệp thực thi của game:
-    Ví dụ: C:\Program Files\Genshin Impact\Genshin Impact game\GenshinImpact.exe
-- Nhấn "LƯU CẤU HÌNH".
+1. Nhấn vào biểu tượng bánh răng (⚙) ở góc trên bên phải giao diện Launcher.
+2. Bấm "Chọn tệp game (.exe)..." và trỏ đến tệp game của bạn:
+   Ví dụ:
+   C:\Program Files\Genshin Impact\Genshin Impact game\GenshinImpact.exe
+3. Bấm nút "LƯU CẤU HÌNH".
 
 --------------------------------------------------------------------------------
-3. VÀO GAME VÀ SỬ DỤNG
+3. VÀO GAME
 --------------------------------------------------------------------------------
-- Nhấn nút "PLAY" màu vàng lớn ở góc dưới bên phải:
-  1. Launcher sẽ tự động liên hệ với máy chủ xác thực:
-     https://genshin-mod.vercel.app
-  2. Khi máy chủ xác nhận hợp lệ, tệp nạp mã tàng hình lib/breezi.exe sẽ được
-     thực thi và tiêm lib/breezi.dll vào game an toàn.
-  3. Launcher sẽ tự động thu nhỏ xuống thanh tác vụ để tiết kiệm RAM.
+- Bấm nút "PLAY" màu vàng:
+  Hệ thống sẽ tự động xác thực với máy chủ https://genshin-mod.vercel.app,
+  sau đó chạy tệp nạp mã tàng hình lib/breezi.exe và tiêm lib/breezi.dll vào game.
+- Khi có phiên bản mod mới: Nút PLAY sẽ chuyển sang "CẬP NHẬT", bạn chỉ cần
+  bấm nút là máy sẽ tự động tải bản DLL và EXE mới nhất về thư mục lib/.
 
-- Khi có bản cập nhật mới từ Admin:
-  Nút PLAY sẽ tự động chuyển thành "CẬP NHẬT". Bạn chỉ cần nhấn nút để tải trực
-  tiếp tệp DLL và EXE mới nhất về máy với thanh tiến trình trực quan.
-
---------------------------------------------------------------------------------
-4. TÙY CHỈNH HÌNH NỀN VÀ VIDEO (NÂNG CAO)
---------------------------------------------------------------------------------
-Bạn có thể mở tệp "config.ini" bằng Notepad để tùy chỉnh:
-- BackgroundImage : Link ảnh nền tùy thích (JPG, PNG).
-- BackgroundVideo : Link video nền MP4 động.
-- EventVideo      : Video sự kiện (mặc định hutao.mp4 có sẵn).
-- ServerUrl       : Địa chỉ máy chủ (mặc định https://genshin-mod.vercel.app).
-
-Chúc bạn có những trải nghiệm tuyệt vời cùng Breezi Mod x Tấn Cutos!
+Chúc bạn có những trải nghiệm tuyệt vời cùng Breezi Mod!
 ================================================================================
