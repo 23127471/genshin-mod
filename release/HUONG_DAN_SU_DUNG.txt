@@ -1,0 +1,57 @@
+================================================================================
+               BREEZI LAUNCHER - GENSHIN IMPACT MOD v1.0.2 x TẤN CUTOS
+================================================================================
+
+Chào mừng bạn đến với bộ cài đặt Breezi Launcher!
+Gói này đã được tối ưu hóa toàn diện để bạn có thể mở và sử dụng ngay lập tức mà
+không cần cấu hình phức tạp.
+
+--------------------------------------------------------------------------------
+1. CÁCH KHỞI CHẠY LAUNCHER (SIÊU NHANH)
+--------------------------------------------------------------------------------
+Bạn có thể khởi chạy bằng 1 trong 2 cách sau:
+
+- Cách 1 (Khuyên dùng): Nhấp đúp chuột vào file:
+    Breezi_Launcher.vbs
+  (Khởi động ngầm tức thì, không hiện cửa sổ dòng lệnh đen)
+
+- Cách 2: Nhấp đúp chuột vào file:
+    Breezi_Launcher.bat
+  (Hiển thị tiến trình khởi chạy và tự động tìm môi trường tối ưu nhất)
+
+* Hệ thống tự động tối ưu hóa tốc độ khởi chạy (< 0.2s) trên mọi máy tính Windows 10/11
+  thông qua Microsoft Edge App Window hoặc Python / Electron.
+
+--------------------------------------------------------------------------------
+2. CÁCH CÀI ĐẶT ĐƯỜNG DẪN GAME
+--------------------------------------------------------------------------------
+- Lần đầu mở Launcher, bạn bấm vào biểu tượng bánh răng (⚙) ở góc trên bên phải.
+- Bấm nút "Chọn tệp game (.exe)..." và trỏ đến tệp thực thi của game:
+    Ví dụ: C:\Program Files\Genshin Impact\Genshin Impact game\GenshinImpact.exe
+- Nhấn "LƯU CẤU HÌNH".
+
+--------------------------------------------------------------------------------
+3. VÀO GAME VÀ SỬ DỤNG
+--------------------------------------------------------------------------------
+- Nhấn nút "PLAY" màu vàng lớn ở góc dưới bên phải:
+  1. Launcher sẽ tự động liên hệ với máy chủ xác thực:
+     https://genshin-mod.vercel.app
+  2. Khi máy chủ xác nhận hợp lệ, tệp nạp mã tàng hình lib/breezi.exe sẽ được
+     thực thi và tiêm lib/breezi.dll vào game an toàn.
+  3. Launcher sẽ tự động thu nhỏ xuống thanh tác vụ để tiết kiệm RAM.
+
+- Khi có bản cập nhật mới từ Admin:
+  Nút PLAY sẽ tự động chuyển thành "CẬP NHẬT". Bạn chỉ cần nhấn nút để tải trực
+  tiếp tệp DLL và EXE mới nhất về máy với thanh tiến trình trực quan.
+
+--------------------------------------------------------------------------------
+4. TÙY CHỈNH HÌNH NỀN VÀ VIDEO (NÂNG CAO)
+--------------------------------------------------------------------------------
+Bạn có thể mở tệp "config.ini" bằng Notepad để tùy chỉnh:
+- BackgroundImage : Link ảnh nền tùy thích (JPG, PNG).
+- BackgroundVideo : Link video nền MP4 động.
+- EventVideo      : Video sự kiện (mặc định hutao.mp4 có sẵn).
+- ServerUrl       : Địa chỉ máy chủ (mặc định https://genshin-mod.vercel.app).
+
+Chúc bạn có những trải nghiệm tuyệt vời cùng Breezi Mod x Tấn Cutos!
+================================================================================

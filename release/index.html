@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Genshin Impact Mod x Tấn Cutos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Montserrat:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <!-- Background Layers -->
+  <div class="background-container">
+    <video id="bgVideo" class="bg-video" autoplay loop muted playsinline preload="auto">
+      <source id="bgVideoSource" src="" type="video/mp4">
+    </video>
+    <div id="bgImage" class="bg-image"></div>
+    <div class="bg-overlay"></div>
+    <div class="particle-ambient"></div>
+  </div>
+
+  <!-- App Shell Window -->
+  <div class="launcher-window">
+    <!-- Top Header Bar -->
+    <header class="launcher-titlebar">
+      <div class="title-left">
+        <div class="app-icon-small">
+          <svg viewBox="0 0 32 32" width="18" height="18">
+            <path d="M16 0 L19 13 L32 16 L19 19 L16 32 L13 19 L0 16 L13 13 Z" fill="url(#starGradTitle)" />
+            <defs>
+              <linearGradient id="starGradTitle" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#FFF9D2" />
+                <stop offset="100%" stop-color="#E3A438" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <span class="title-text" id="launcherTitleText">Honkai Star Rail Mod x Tấn Cutos 1.0.5</span>
+      </div>
+
+      <div class="title-controls">
+        <button id="btnSettings" class="ctrl-btn btn-settings" title="Cài đặt launcher">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <path
+              d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" />
+          </svg>
+        </button>
+        <button id="btnMinimize" class="ctrl-btn btn-min" title="Thu nhỏ">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+            <path d="M19 13H5v-2h14v2z" />
+          </svg>
+        </button>
+        <button id="btnClose" class="ctrl-btn btn-close" title="Đóng">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+            <path
+              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="launcher-main">
+      <section class="left-section">
+        <!-- Logo Branding -->
+        <div class="logo-wrapper">
+          <div class="logo-sub">GENSHIN</div>
+          <div class="logo-main-row">
+            <span class="logo-main" id="brandTitleText">IMPACT</span>
+            <svg class="logo-star" viewBox="0 0 32 32" width="28" height="28">
+              <path d="M16 0 L19 13 L32 16 L19 19 L16 32 L13 19 L0 16 L13 13 Z" fill="url(#starGradMain)" />
+              <defs>
+                <linearGradient id="starGradMain" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#FFF9D2" />
+                  <stop offset="100%" stop-color="#E3A438" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <div class="logo-subline" id="brandSubtitleText">MAY THIS JOURNEY LEAD US STARWARD</div>
+          <div class="logo-badge" id="badgeText">MOD x TẤN CUTOS</div>
+        </div>
+
+        <!-- Hot Event Video Card -->
+        <div class="promo-card" id="promoCard">
+          <div class="promo-video-container">
+            <video class="promo-card-video" id="promoCardVideo" autoplay loop muted playsinline preload="auto">
+              <source id="promoCardVideoSource" src="hutao.mp4" type="video/mp4">
+            </video>
+            <div class="promo-card-overlay">
+              <div class="promo-tag">HOT EVENT • VIDEO</div>
+              <div class="promo-title">GENSHIN IMPACT MOD x TẤN CUTOS</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- News & Updates Tabs -->
+        <div class="tabs-container">
+          <div class="tabs-header">
+            <button class="tab-btn active" data-tab="events">Events</button>
+            <button class="tab-btn" data-tab="notices">Notices</button>
+            <button class="tab-btn" data-tab="info">Info</button>
+          </div>
+          <div class="tabs-body">
+            <!-- Events Tab -->
+            <div class="tab-pane active" id="tab-events">
+              <div class="news-row">
+                <span class="news-bullet"></span>
+                <span class="news-title">"All-Stars Invite" Web Event Is Currently Underway</span>
+                <span class="news-date">04/21</span>
+              </div>
+              <div class="news-row">
+                <span class="news-bullet"></span>
+                <span class="news-title">Breezi Mod Engine v1.0.2: Reworked Bypass & No Clip</span>
+                <span class="news-date">10/25</span>
+              </div>
+            </div>
+
+            <!-- Notices Tab -->
+            <div class="tab-pane" id="tab-notices">
+              <div class="news-row">
+                <span class="news-bullet"></span>
+                <span class="news-title">Injector now uses BrandenBone Stealth Manual Mapping</span>
+                <span class="news-date">10/25</span>
+              </div>
+              <div class="news-row">
+                <span class="news-bullet"></span>
+                <span class="news-title">Added Auto Challenge & Auto Puzzle Solvers</span>
+                <span class="news-date">10/25</span>
+              </div>
+            </div>
+
+            <!-- Info Tab -->
+            <div class="tab-pane" id="tab-info">
+              <div class="news-row">
+                <span class="news-bullet"></span>
+                <span class="news-title">Engine Location: /lib/breezi.exe & /lib/breezi.dll</span>
+                <span class="news-date">READY</span>
+              </div>
+              <div class="news-row">
+                <span class="news-bullet"></span>
+                <span class="news-title">Support Direct Link Background Video & Audio</span>
+                <span class="news-date">ONLINE</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Center & Right Background Visual Accents -->
+      <div class="aesthetic-butterfly">
+        <svg viewBox="0 0 40 40" width="36" height="36" fill="url(#butterflyGrad)">
+          <path
+            d="M20 20 C10 12, 5 4, 15 2 C22 1, 21 16, 20 20 Z M20 20 C30 12, 35 4, 25 2 C18 1, 19 16, 20 20 Z M20 20 C12 25, 4 34, 12 36 C18 37, 19 25, 20 20 Z M20 20 C28 25, 36 34, 28 36 C22 37, 21 25, 20 20 Z" />
+          <defs>
+            <linearGradient id="butterflyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#C084FC" />
+              <stop offset="50%" stop-color="#818CF8" />
+              <stop offset="100%" stop-color="#60A5FA" />
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+    </main>
+
+    <!-- Bottom Launch & Status Footer Bar -->
+    <footer class="launcher-footer">
+      <div class="footer-left">
+        <!-- Top Status Line -->
+        <div class="status-top-line">
+          <div class="engine-status">
+            <span class="status-indicator-dot"></span>
+            <span class="status-indicator-text" id="engineStatusText">Game Engine Ready (Injector Connected)</span>
+          </div>
+          <div class="readiness-status" id="readinessStatusText">Trạng thái: Sẵn sàng</div>
+        </div>
+
+        <!-- Sleek Gold Glowing Progress Line -->
+        <div class="progress-line-container">
+          <div class="progress-line-track">
+            <div class="progress-line-fill" id="progressFill">
+              <div class="progress-line-glow"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Subtext: Executable info -->
+        <div class="executable-info-row">
+          <span class="exe-label">Tệp thực thi:</span>
+          <span class="exe-path" id="displayGameExe">Chưa chọn (Nhấn ⚙ để cấu hình)</span>
+        </div>
+      </div>
+
+      <!-- Action Button Group -->
+      <div class="footer-right">
+        <div class="play-action-group">
+          <button id="btnPlay" class="btn-play">
+            <span class="btn-play-text">PLAY</span>
+          </button>
+          <button id="btnQuickMenu" class="btn-play-options" title="Tùy chọn nhanh">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+              <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Settings Modal Dialog -->
+  <div class="modal-backdrop" id="settingsModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-box">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="#E3A438">
+            <path
+              d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" />
+          </svg>
+          <span class="modal-title">Cấu hình Launcher & Game</span>
+        </div>
+        <button class="modal-close" id="modalCloseBtn">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Setting 1: Game Executable Path -->
+        <div class="form-group">
+          <label class="form-label" for="cfgGamePath">
+            <span>Đường dẫn tệp thực thi game (GenshinImpact.exe)</span>
+            <span class="badge-required">*Bắt buộc</span>
+          </label>
+          <div class="input-with-button">
+            <input type="text" id="cfgGamePath" class="form-input"
+              placeholder="Ví dụ: C:\Games\Genshin Impact\GenshinImpact.exe">
+            <button id="btnBrowseGame" class="btn-secondary">Duyệt...</button>
+          </div>
+          <p class="form-help">
+            Đường dẫn này sẽ được ghi vào <code class="code-tag">config.ini</code> và tự động đồng bộ sang <code
+              class="code-tag">/lib/breezi.json</code>. Khi bấm <strong>PLAY</strong>, launcher sẽ chạy <code
+              class="code-tag">/lib/breezi.exe</code>.
+          </p>
+        </div>
+
+
+
+        <!-- Setting: Options -->
+        <div class="form-group checkbox-group">
+          <label class="checkbox-container">
+            <input type="checkbox" id="cfgAutoMinimize" checked>
+            <span class="checkmark"></span>
+            <span class="checkbox-label">Tự động thu nhỏ Launcher khi ấn PLAY</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="btnSaveConfig" class="btn-primary-action">Lưu cấu hình</button>
+        <button id="btnCancelConfig" class="btn-outline-action">Hủy</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="renderer.js"></script>
+</body>
+
+</html>

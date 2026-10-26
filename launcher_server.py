@@ -22,6 +22,7 @@ BREEZI_JSON = os.path.join(LIB_DIR, 'breezi.json')
 def read_config():
     config = {
         "GamePath": "",
+        "ServerUrl": "https://genshin-mod.vercel.app",
         "AutoMinimize": "true",
         "BackgroundImage": "https://raw.githubusercontent.com/Zeal-L/Honkai-Star-Rail-Wallpaper/main/Offcial/1313143.jpg",
         "BackgroundVideo": "https://raw.githubusercontent.com/adiambassador/wallpapers/main/honkai/march-7th-honkai-star-rail-adventure.1920x1080.mp4",
@@ -144,7 +145,29 @@ class LauncherHandler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps(res).encode('utf-8'))
             return
+        elif self.path == '/api/download-update':
+            res = self.download_update()
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(res).encode('utf-8'))
+            return
         self.send_error(404)
+
+    def download_update(self):
+        import urllib.request
+        config = read_config()
+        server_url = config.get('ServerUrl', 'https://genshin-mod.vercel.app').rstrip('/')
+        files = ['breezi.dll', 'breezi.exe']
+        try:
+            for f in files:
+                url = f"{server_url}/api/download?file={f}"
+                dest = os.path.join(LIB_DIR, f)
+                print(f"[Update] Dang tai {url} -> {dest}")
+                urllib.request.urlretrieve(url, dest)
+            return {"success": True, "message": "Đã cập nhật breezi.dll và breezi.exe mới nhất!"}
+        except Exception as e:
+            return {"success": False, "message": f"Lỗi cập nhật: {str(e)}"}
 
     def pick_file(self):
         # Hỗ trợ mở File Dialog trên Windows PowerShell hoặc Linux zenity
@@ -210,9 +233,19 @@ def run():
         print(f"  Breezi Launcher Server đang chạy tại: {url}")
         print(f"==================================================")
         try:
-            webbrowser.open(url)
+            if sys.platform == 'win32':
+                # Chế độ App Window siêu nhẹ, khởi động tức thì < 0.2s
+                opened = False
+                for browser_cmd in [f'start msedge --app="{url}" --window-size=1280,720', f'start chrome --app="{url}" --window-size=1280,720']:
+                    if os.system(browser_cmd) == 0:
+                        opened = True
+                        break
+                if not opened:
+                    webbrowser.open(url)
+            else:
+                webbrowser.open(url)
         except Exception:
-            pass
+            webbrowser.open(url)
         try:
             httpd.serve_forever()
         except KeyboardInterrupt:

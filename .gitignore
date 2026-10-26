@@ -30,6 +30,7 @@ Thumbs.db
 *.swp
 *.swo
 
-# Temporary chunks
+# Temporary chunks and archives
+*.zip
 server/tmp/
 server/breezi_chunks/
