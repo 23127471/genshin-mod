@@ -5,12 +5,22 @@ const { spawn } = require('child_process');
 
 let mainWindow;
 
+function getAppRootDir() {
+  if (process.env.PORTABLE_EXECUTABLE_DIR) {
+    return process.env.PORTABLE_EXECUTABLE_DIR;
+  }
+  if (app.isPackaged) {
+    return path.dirname(process.execPath);
+  }
+  return __dirname;
+}
+
 function getConfigPath() {
-  return path.join(__dirname, 'config.ini');
+  return path.join(getAppRootDir(), 'config.ini');
 }
 
 function getLibDir() {
-  return path.join(__dirname, 'lib');
+  return path.join(getAppRootDir(), 'lib');
 }
 
 function getBreeziExePath() {
@@ -172,7 +182,15 @@ app.on('window-all-closed', function () {
 
 // IPC Handlers
 ipcMain.handle('get-config', async () => {
-  return readConfig();
+  const config = readConfig();
+  const res = { ...config };
+  if (res.EventVideo && !res.EventVideo.startsWith('http://') && !res.EventVideo.startsWith('https://')) {
+    const videoPath = path.join(getAppRootDir(), res.EventVideo);
+    if (fs.existsSync(videoPath)) {
+      res.EventVideo = `file://${videoPath.replace(/\\/g, '/')}`;
+    }
+  }
+  return res;
 });
 
 ipcMain.handle('save-config', async (event, data) => {

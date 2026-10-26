@@ -11,7 +11,7 @@ và công cụ cần thiết để bạn chạy mod ngay mà không cần cài �
 --------------------------------------------------------------------------------
 Bạn chỉ cần nhấp đúp chuột vào:
 
-    Breezi_Launcher.exe   (hoặc Start_Launcher.bat)
+    Breezi_Launcher.exe
 
 * Launcher sẽ tự động mở lên trong vòng < 0.2 giây với giao diện mượt mà,
   phát video nền và đầy đủ tính năng cấu hình.

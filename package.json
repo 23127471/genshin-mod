@@ -6,7 +6,37 @@
   "main": "main.js",
   "scripts": {
     "start": "electron --no-sandbox .",
-    "dev": "electron --no-sandbox ."
+    "dev": "electron --no-sandbox .",
+    "build:win": "electron-builder --win portable"
+  },
+  "build": {
+    "appId": "com.tancutos.breezilauncher",
+    "productName": "Breezi Launcher",
+    "directories": {
+      "output": "dist",
+      "buildResources": "assets"
+    },
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": [
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "portable": {
+      "artifactName": "Breezi_Launcher.exe",
+      "requestExecutionLevel": "admin"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer.js",
+      "index.html",
+      "style.css",
+      "assets/**/*"
+    ]
   },
   "keywords": [
     "breezi",
