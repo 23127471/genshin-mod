@@ -276,12 +276,29 @@ ipcMain.handle('launch-game', async () => {
 
   try {
     if (process.platform === 'win32') {
-      const child = spawn(breeziExe, [], {
-        cwd: libDir,
-        detached: true,
-        stdio: 'ignore'
-      });
-      child.unref();
+      try {
+        const child = spawn(breeziExe, [], {
+          cwd: libDir,
+          detached: true,
+          stdio: 'ignore'
+        });
+        child.on('error', (spawnErr) => {
+          console.warn('[Launch] spawn trực tiếp lỗi (cần quyền Admin), kích hoạt UAC RunAs:', spawnErr.message);
+          const psCommand = `Start-Process -FilePath "${breeziExe}" -WorkingDirectory "${libDir}" -Verb RunAs`;
+          spawn('powershell.exe', ['-Command', psCommand], {
+            detached: true,
+            stdio: 'ignore'
+          }).unref();
+        });
+        child.unref();
+      } catch (directErr) {
+        console.warn('[Launch] spawn lỗi, kích hoạt PowerShell RunAs UAC:', directErr.message);
+        const psCommand = `Start-Process -FilePath "${breeziExe}" -WorkingDirectory "${libDir}" -Verb RunAs`;
+        spawn('powershell.exe', ['-Command', psCommand], {
+          detached: true,
+          stdio: 'ignore'
+        }).unref();
+      }
     } else {
       // Trên Linux, thử chạy qua wine nếu có
       const hasWine = fs.existsSync('/usr/bin/wine') || fs.existsSync('/usr/local/bin/wine');

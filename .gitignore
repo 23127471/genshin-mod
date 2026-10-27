@@ -35,3 +35,4 @@ Thumbs.db
 server/tmp/
 server/breezi_chunks/
 dist/
+release/*.exe

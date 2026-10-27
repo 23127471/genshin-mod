@@ -28,7 +28,7 @@ function ensureDirs() {
     if (fs.existsSync(templatePath)) {
       try {
         fs.copyFileSync(templatePath, DB_FILE);
-      } catch (_) {}
+      } catch (_) { }
     }
   }
 }
@@ -76,7 +76,7 @@ function saveDatabase(data) {
 let vercelBlob = null;
 try {
   vercelBlob = require('@vercel/blob');
-} catch (_) {}
+} catch (_) { }
 
 // Lấy token Vercel Blob từ Environment Variable hoặc từ Database
 function getBlobToken() {
@@ -84,7 +84,7 @@ function getBlobToken() {
   try {
     const db = getDatabase();
     if (db && db.blob_token) return db.blob_token;
-  } catch (_) {}
+  } catch (_) { }
   return null;
 }
 
@@ -228,7 +228,7 @@ async function assembleChunks(uploadId, filename, totalChunks) {
   // Xóa dọn dẹp các chunk tạm thời
   for (let i = 0; i < totalChunks; i++) {
     const chunkFile = path.join(CHUNKS_DIR, `${uploadId}_chunk_${i}`);
-    try { fs.unlinkSync(chunkFile); } catch (_) {}
+    try { fs.unlinkSync(chunkFile); } catch (_) { }
   }
 
   // Lưu file bản mới nhất và cập nhật database
