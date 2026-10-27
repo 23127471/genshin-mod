@@ -122,8 +122,13 @@ module.exports = async (req, res) => {
     // 4. Kiểm tra xem máy chủ có cấu hình Vercel Blob Storage không
     if (action === 'check_blob_enabled') {
       const hasToken = !!process.env.BLOB_READ_WRITE_TOKEN;
+      const hasStoreId = !!process.env.BLOB_STORE_ID;
+      const isEnabled = hasToken || hasStoreId;
       res.status(200).json({
-        blobEnabled: hasToken
+        blobEnabled: isEnabled,
+        hasToken,
+        hasStoreId,
+        storeId: process.env.BLOB_STORE_ID ? process.env.BLOB_STORE_ID.substring(0, 10) + '...' : null
       });
       return;
     }

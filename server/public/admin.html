@@ -539,9 +539,15 @@
           const statusText = document.getElementById('blobStatusIndicator');
           if (statusText) {
             if (isBlobEnabledOnServer) {
-              statusText.innerHTML = '<span style="color: #34d399; font-weight: 600;">☁️ Vercel Blob CDN: ĐÃ KẾT NỐI (Lưu trữ vĩnh viễn 100%)</span>';
+              const info = data.hasToken ? 'qua Token' : 'qua OIDC (' + (data.storeId || '') + ')';
+              statusText.innerHTML = `<span style="color: #34d399; font-weight: 600;">☁️ Vercel Blob CDN: ĐÃ KẾT NỐI ${info} (Lưu trữ vĩnh viễn 100%)</span> <a href="javascript:void(0)" onclick="checkBlobStorage()" style="color: #94a3b8; font-size: 11px; margin-left: 8px;">[Kiểm tra lại]</a>`;
             } else {
-              statusText.innerHTML = '<span style="color: #fbbf24; font-weight: 600;">⚠️ Vercel Blob chưa kích hoạt (Chưa tạo Blob Store trên Vercel Dashboard)</span>';
+              statusText.innerHTML = `
+                <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); padding: 8px 12px; border-radius: 6px; color: #fbbf24; margin-top: 6px;">
+                  ⚠️ <b>Vercel Blob chưa kích hoạt trên phiên bản này:</b> Nếu bạn vừa tạo Blob Store, bạn cần <b>Redeploy</b> lại dự án trên Vercel để nhận biến môi trường (hoặc sao chép <code>BLOB_READ_WRITE_TOKEN</code> vào mục Settings > Environment Variables của Vercel).
+                  <a href="javascript:void(0)" onclick="checkBlobStorage()" style="color: #60a5fa; font-size: 11.5px; margin-left: 8px; text-decoration: underline;">[Bấm để kiểm tra lại]</a>
+                </div>
+              `;
             }
           }
         }

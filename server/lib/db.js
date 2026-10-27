@@ -110,9 +110,10 @@ async function saveLatestFile(filename, buffer) {
   const db = getDatabase();
   if (!db.files) db.files = {};
 
-  // 4. Hỗ trợ Vercel Blob Storage nếu có BLOB_READ_WRITE_TOKEN
+  // 4. Hỗ trợ Vercel Blob Storage nếu có BLOB_READ_WRITE_TOKEN hoặc BLOB_STORE_ID (OIDC)
   let blobUrl = null;
-  if (process.env.BLOB_READ_WRITE_TOKEN && vercelBlob) {
+  const isBlobConfigured = !!(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID);
+  if (isBlobConfigured && vercelBlob) {
     try {
       if (db.files[filename] && db.files[filename].blobUrl) {
         console.log(`[Vercel Blob] Xóa bản cũ trên Blob CDN: ${db.files[filename].blobUrl}`);
