@@ -78,6 +78,16 @@ try {
   vercelBlob = require('@vercel/blob');
 } catch (_) {}
 
+// Lấy token Vercel Blob từ Environment Variable hoặc từ Database
+function getBlobToken() {
+  if (process.env.BLOB_READ_WRITE_TOKEN) return process.env.BLOB_READ_WRITE_TOKEN;
+  try {
+    const db = getDatabase();
+    if (db && db.blob_token) return db.blob_token;
+  } catch (_) {}
+  return null;
+}
+
 /**
  * Lưu file mới nhất và tự động XÓA bản cũ (chỉ lưu duy nhất bản mới nhất)
  */
@@ -106,15 +116,6 @@ async function saveLatestFile(filename, buffer) {
   // 3. Tính toán SHA-256 hash và dung lượng
   const hash = crypto.createHash('sha256').update(buffer).digest('hex');
   const size = buffer.length;
-
-function getBlobToken() {
-  if (process.env.BLOB_READ_WRITE_TOKEN) return process.env.BLOB_READ_WRITE_TOKEN;
-  try {
-    const db = getDatabase();
-    if (db && db.blob_token) return db.blob_token;
-  } catch (_) {}
-  return null;
-}
 
   const db = getDatabase();
   if (!db.files) db.files = {};
