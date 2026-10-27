@@ -54,19 +54,9 @@ module.exports = async (req, res) => {
       onBeforeGenerateToken: async (pathname) => {
         console.log('[Vercel Blob] Đang tạo token tải lên cho file:', pathname);
         return {
-          allowedContentTypes: [
-            'application/octet-stream',
-            'application/x-msdownload',
-            'application/x-dosexec',
-            'application/vnd.microsoft.portable-executable'
-          ],
-          maximumSizeInBytes: 200 * 1024 * 1024, // 200 MB
-          addRandomSuffix: false,
-          tokenPayload: JSON.stringify({ pathname })
+          maximumSizeInBytes: 250 * 1024 * 1024, // 250 MB
+          addRandomSuffix: true
         };
-      },
-      onUploadCompleted: async ({ blob }) => {
-        console.log('[Vercel Blob] Tải lên hoàn tất trên CDN:', blob.url);
       }
     });
 

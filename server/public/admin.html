@@ -630,15 +630,21 @@
           ptext.children[0].textContent = 'Đang tải trực tiếp lên Vercel Blob CDN (Không giới hạn dung lượng)...';
           btn.textContent = 'Đang tải lên CDN...';
 
+          let maxPctSeen = 0;
           const blobResult = await vercelBlobClientUpload(targetFilename, file, {
             access: 'public',
             handleUploadUrl: '/api/blob-upload',
             headers: getAuthHeaders(),
             onUploadProgress: (progressEvent) => {
-              const pct = Math.round(progressEvent.percentage);
-              pbar.style.width = pct + '%';
-              ptext.children[0].textContent = `Đang tải lên CDN: ${pct}% (${(progressEvent.loaded / 1024 / 1024).toFixed(1)}MB / ${(progressEvent.total / 1024 / 1024).toFixed(1)}MB)`;
-              ptext.children[1].textContent = pct + '%';
+              const rawPct = Math.round(progressEvent.percentage);
+              if (rawPct > maxPctSeen) maxPctSeen = rawPct;
+              pbar.style.width = maxPctSeen + '%';
+              if (maxPctSeen >= 100) {
+                ptext.children[0].textContent = `Đã tải lên CDN 100%! Đang hoàn tất lưu trữ đám mây...`;
+              } else {
+                ptext.children[0].textContent = `Đang tải lên CDN: ${maxPctSeen}% (${(progressEvent.loaded / 1024 / 1024).toFixed(1)}MB / ${(progressEvent.total / 1024 / 1024).toFixed(1)}MB)`;
+              }
+              ptext.children[1].textContent = maxPctSeen + '%';
             }
           });
 
