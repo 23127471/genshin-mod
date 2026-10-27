@@ -1,4 +1,4 @@
-const { saveChunk, assembleChunks, saveLatestFile, getDatabase, saveDatabase } = require('../lib/db');
+const { saveChunk, assembleChunks, saveLatestFile, getDatabase, saveDatabase, getBlobToken } = require('../lib/db');
 const { checkAdminAuth } = require('../lib/auth');
 
 module.exports = async (req, res) => {
@@ -119,16 +119,27 @@ module.exports = async (req, res) => {
       return;
     }
 
-    // 4. Kiểm tra xem máy chủ có cấu hình Vercel Blob Storage không
-    if (action === 'check_blob_enabled') {
-      const hasToken = !!process.env.BLOB_READ_WRITE_TOKEN;
-      const hasStoreId = !!process.env.BLOB_STORE_ID;
-      const isEnabled = hasToken || hasStoreId;
+    // 4. Lưu trực tiếp mã Vercel Blob Token từ trang Admin (không cần redeploy)
+    if (action === 'save_blob_token' && body.blobToken) {
+      const db = getDatabase();
+      db.blob_token = body.blobToken.trim();
+      saveDatabase(db);
+      console.log('[Upload] Đã lưu mã Vercel Blob Token vào database thành công!');
       res.status(200).json({
-        blobEnabled: isEnabled,
-        hasToken,
-        hasStoreId,
-        storeId: process.env.BLOB_STORE_ID ? process.env.BLOB_STORE_ID.substring(0, 10) + '...' : null
+        success: true,
+        message: 'Đã lưu Vercel Blob Token thành công! Kết nối Blob CDN đã sẵn sàng hoạt động.'
+      });
+      return;
+    }
+
+    // 5. Kiểm tra xem máy chủ có cấu hình Vercel Blob Storage không
+    if (action === 'check_blob_enabled') {
+      const activeToken = getBlobToken();
+      const db = getDatabase();
+      res.status(200).json({
+        blobEnabled: !!activeToken,
+        hasEnvToken: !!process.env.BLOB_READ_WRITE_TOKEN,
+        hasDbToken: !!db.blob_token
       });
       return;
     }

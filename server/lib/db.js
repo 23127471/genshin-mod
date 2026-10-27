@@ -107,22 +107,32 @@ async function saveLatestFile(filename, buffer) {
   const hash = crypto.createHash('sha256').update(buffer).digest('hex');
   const size = buffer.length;
 
+function getBlobToken() {
+  if (process.env.BLOB_READ_WRITE_TOKEN) return process.env.BLOB_READ_WRITE_TOKEN;
+  try {
+    const db = getDatabase();
+    if (db && db.blob_token) return db.blob_token;
+  } catch (_) {}
+  return null;
+}
+
   const db = getDatabase();
   if (!db.files) db.files = {};
 
-  // 4. Hỗ trợ Vercel Blob Storage nếu có BLOB_READ_WRITE_TOKEN hoặc BLOB_STORE_ID (OIDC)
+  // 4. Hỗ trợ Vercel Blob Storage nếu có token
   let blobUrl = null;
-  const isBlobConfigured = !!(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID);
-  if (isBlobConfigured && vercelBlob) {
+  const activeBlobToken = getBlobToken();
+  if (activeBlobToken && vercelBlob) {
     try {
       if (db.files[filename] && db.files[filename].blobUrl) {
         console.log(`[Vercel Blob] Xóa bản cũ trên Blob CDN: ${db.files[filename].blobUrl}`);
-        await vercelBlob.del(db.files[filename].blobUrl);
+        await vercelBlob.del(db.files[filename].blobUrl, { token: activeBlobToken });
       }
       console.log(`[Vercel Blob] Tải bản mới nhất của ${filename} lên Blob CDN...`);
       const blobResult = await vercelBlob.put(`latest/${filename}`, buffer, {
         access: 'public',
-        addRandomSuffix: false
+        addRandomSuffix: false,
+        token: activeBlobToken
       });
       blobUrl = blobResult.url;
       console.log(`[Vercel Blob] Upload thành công CDN URL: ${blobUrl}`);
@@ -218,6 +228,7 @@ module.exports = {
   getLatestFileInfo,
   saveChunk,
   assembleChunks,
+  getBlobToken,
   STORAGE_DIR,
   IS_VERCEL
 };

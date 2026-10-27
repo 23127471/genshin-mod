@@ -1,5 +1,6 @@
 const { handleUpload } = require('@vercel/blob/client');
 const { checkAdminAuth } = require('../lib/auth');
+const { getBlobToken } = require('../lib/db');
 
 module.exports = async (req, res) => {
   // CORS
@@ -37,10 +38,19 @@ module.exports = async (req, res) => {
     return;
   }
 
+  const activeToken = getBlobToken();
+  if (!activeToken) {
+    res.status(400).json({
+      error: 'Chưa cấu hình BLOB_READ_WRITE_TOKEN! Vui lòng nhập token vào ô cài đặt trên trang Admin.'
+    });
+    return;
+  }
+
   try {
     const jsonResponse = await handleUpload({
       body,
       request: req,
+      token: activeToken,
       onBeforeGenerateToken: async (pathname) => {
         console.log('[Vercel Blob] Đang tạo token tải lên cho file:', pathname);
         return {
