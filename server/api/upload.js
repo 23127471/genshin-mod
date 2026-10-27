@@ -121,14 +121,29 @@ module.exports = async (req, res) => {
 
     // 4. Lưu trực tiếp mã Vercel Blob Token từ trang Admin (không cần redeploy)
     if (action === 'save_blob_token' && body.blobToken) {
+      let rawToken = String(body.blobToken).trim();
+      if (rawToken.includes('=')) {
+        rawToken = rawToken.split('=')[1].trim();
+      }
+      rawToken = rawToken.replace(/^["']|["'];?$/g, '').trim();
+
       const db = getDatabase();
-      db.blob_token = body.blobToken.trim();
+      db.blob_token = rawToken;
       saveDatabase(db);
       console.log('[Upload] Đã lưu mã Vercel Blob Token vào database thành công!');
       res.status(200).json({
         success: true,
         message: 'Đã lưu Vercel Blob Token thành công! Kết nối Blob CDN đã sẵn sàng hoạt động.'
       });
+      return;
+    }
+
+    // 4b. Xóa token cũ
+    if (action === 'clear_blob_token') {
+      const db = getDatabase();
+      delete db.blob_token;
+      saveDatabase(db);
+      res.status(200).json({ success: true, message: 'Đã xóa Blob Token cũ!' });
       return;
     }
 
