@@ -130,11 +130,24 @@ async function saveLatestFile(filename, buffer) {
         await vercelBlob.del(db.files[filename].blobUrl, { token: activeBlobToken });
       }
       console.log(`[Vercel Blob] Tải bản mới nhất của ${filename} lên Blob CDN...`);
-      const blobResult = await vercelBlob.put(`latest/${filename}`, buffer, {
-        access: 'public',
-        addRandomSuffix: false,
-        token: activeBlobToken
-      });
+      let blobResult;
+      try {
+        blobResult = await vercelBlob.put(`latest/${filename}`, buffer, {
+          access: 'public',
+          addRandomSuffix: false,
+          token: activeBlobToken
+        });
+      } catch (putErr) {
+        if (putErr.message && putErr.message.includes('private store')) {
+          blobResult = await vercelBlob.put(`latest/${filename}`, buffer, {
+            access: 'private',
+            addRandomSuffix: false,
+            token: activeBlobToken
+          });
+        } else {
+          throw putErr;
+        }
+      }
       blobUrl = blobResult.url;
       console.log(`[Vercel Blob] Upload thành công CDN URL: ${blobUrl}`);
     } catch (blobErr) {
