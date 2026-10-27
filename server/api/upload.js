@@ -136,10 +136,20 @@ module.exports = async (req, res) => {
     if (action === 'check_blob_enabled') {
       const activeToken = getBlobToken();
       const db = getDatabase();
+      let storeAccess = 'unknown';
+      if (db.files) {
+        for (const f of Object.values(db.files)) {
+          if (f.blobUrl) {
+            if (f.blobUrl.includes('.private.')) storeAccess = 'private';
+            else if (f.blobUrl.includes('.public.')) storeAccess = 'public';
+          }
+        }
+      }
       res.status(200).json({
         blobEnabled: !!activeToken,
         hasEnvToken: !!process.env.BLOB_READ_WRITE_TOKEN,
-        hasDbToken: !!db.blob_token
+        hasDbToken: !!db.blob_token,
+        storeAccess
       });
       return;
     }

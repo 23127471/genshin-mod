@@ -1,7 +1,9 @@
 const fs = require('fs');
-const { getLatestFileInfo, getDatabase } = require('../lib/db');
+const { getLatestFileInfo, getDatabase, getBlobToken } = require('../lib/db');
+const { get } = require('@vercel/blob');
+const { Readable } = require('stream');
 
-module.exports = (req, res) => {
+module.exports = async (req, res) => {
   // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -29,10 +31,33 @@ module.exports = (req, res) => {
   const db = getDatabase();
   const fileMeta = db.files && db.files[filename];
   if (fileMeta && fileMeta.blobUrl) {
-    console.log(`[Download] Chuyển hướng ${filename} đến Vercel Blob CDN: ${fileMeta.blobUrl}`);
-    res.writeHead(302, { Location: fileMeta.blobUrl });
-    res.end();
-    return;
+    // Nếu là Public Store: chuyển hướng trực tiếp đến CDN toàn cầu
+    if (!fileMeta.blobUrl.includes('.private.')) {
+      console.log(`[Download] Chuyển hướng ${filename} đến Vercel Blob Public CDN: ${fileMeta.blobUrl}`);
+      res.writeHead(302, { Location: fileMeta.blobUrl });
+      res.end();
+      return;
+    }
+
+    // Nếu là Private Store: stream trực tiếp có token xác thực
+    const activeToken = getBlobToken();
+    if (activeToken) {
+      try {
+        console.log(`[Download] Đang stream ${filename} từ Vercel Blob Private Store...`);
+        const blobData = await get(fileMeta.blobUrl, { access: 'private', token: activeToken });
+        if (blobData && blobData.stream) {
+          res.setHeader('Content-Type', 'application/octet-stream');
+          res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+          if (blobData.blob && blobData.blob.size) {
+            res.setHeader('Content-Length', blobData.blob.size);
+          }
+          Readable.fromWeb(blobData.stream).pipe(res);
+          return;
+        }
+      } catch (err) {
+        console.error('[Download Private Blob Error]:', err.message);
+      }
+    }
   }
 
   const fileInfo = getLatestFileInfo(filename);

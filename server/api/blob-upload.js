@@ -38,6 +38,12 @@ module.exports = async (req, res) => {
     return;
   }
 
+  // Nếu là callback hoàn thành upload từ client, trả về 200 ok ngay lập tức
+  if (body && body.type === 'blob.upload-completed') {
+    console.log('[Blob Upload] Nhận callback blob.upload-completed từ client:', body.payload);
+    return res.status(200).json({ type: 'blob.upload-completed', response: 'ok' });
+  }
+
   const activeToken = getBlobToken();
   if (!activeToken) {
     res.status(400).json({

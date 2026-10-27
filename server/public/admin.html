@@ -540,9 +540,10 @@
           if (statusText) {
             if (isBlobEnabledOnServer) {
               const src = data.hasEnvToken ? 'Vercel Environment' : 'Database Token';
+              const accessNote = data.storeAccess === 'private' ? ' | ⚠️ Store: Private' : (data.storeAccess === 'public' ? ' | 🌐 Store: Public' : '');
               statusText.innerHTML = `
                 <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 8px 14px; border-radius: 6px; display: flex; align-items: center; justify-content: space-between;">
-                  <span style="color: #34d399; font-weight: 600;">☁️ Vercel Blob CDN: ĐÃ KẾT NỐI (${src} - Lưu trữ vĩnh viễn 100%)</span>
+                  <span style="color: #34d399; font-weight: 600;">☁️ Vercel Blob CDN: ĐÃ KẾT NỐI (${src}${accessNote})</span>
                   <a href="javascript:void(0)" onclick="checkBlobStorage()" style="color: #94a3b8; font-size: 11.5px; text-decoration: underline;">[Kiểm tra lại]</a>
                 </div>
               `;
@@ -630,23 +631,42 @@
           ptext.children[0].textContent = 'Đang tải trực tiếp lên Vercel Blob CDN (Không giới hạn dung lượng)...';
           btn.textContent = 'Đang tải lên CDN...';
 
-          let maxPctSeen = 0;
-          const blobResult = await vercelBlobClientUpload(targetFilename, file, {
-            access: 'public',
-            handleUploadUrl: '/api/blob-upload',
-            headers: getAuthHeaders(),
-            onUploadProgress: (progressEvent) => {
-              const rawPct = Math.round(progressEvent.percentage);
-              if (rawPct > maxPctSeen) maxPctSeen = rawPct;
-              pbar.style.width = maxPctSeen + '%';
-              if (maxPctSeen >= 100) {
-                ptext.children[0].textContent = `Đã tải lên CDN 100%! Đang hoàn tất lưu trữ đám mây...`;
-              } else {
-                ptext.children[0].textContent = `Đang tải lên CDN: ${maxPctSeen}% (${(progressEvent.loaded / 1024 / 1024).toFixed(1)}MB / ${(progressEvent.total / 1024 / 1024).toFixed(1)}MB)`;
+          const doUpload = async (accessMode) => {
+            let maxPctSeen = 0;
+            return await vercelBlobClientUpload(targetFilename, file, {
+              access: accessMode,
+              multipart: file.size > 5 * 1024 * 1024,
+              handleUploadUrl: '/api/blob-upload',
+              headers: getAuthHeaders(),
+              onUploadProgress: (progressEvent) => {
+                const rawPct = Math.round(progressEvent.percentage);
+                if (rawPct > maxPctSeen) maxPctSeen = rawPct;
+                pbar.style.width = maxPctSeen + '%';
+                if (maxPctSeen >= 100) {
+                  ptext.children[0].textContent = `Đã tải lên CDN 100%! Đang hoàn tất lưu trữ đám mây...`;
+                } else {
+                  ptext.children[0].textContent = `Đang tải lên CDN (${accessMode}): ${maxPctSeen}% (${(progressEvent.loaded / 1024 / 1024).toFixed(1)}MB / ${(progressEvent.total / 1024 / 1024).toFixed(1)}MB)`;
+                }
+                ptext.children[1].textContent = maxPctSeen + '%';
               }
-              ptext.children[1].textContent = maxPctSeen + '%';
+            });
+          };
+
+          let blobResult;
+          let usedAccess = 'public';
+          try {
+            blobResult = await doUpload('public');
+          } catch (uploadErr) {
+            // Tự động chuyển đổi nếu kho Blob được tạo với quyền Private
+            if (uploadErr.message && (uploadErr.message.includes('private store') || uploadErr.message.includes('configured with private access'))) {
+              console.warn('[Admin] Store cấu hình là private, tự động chuyển sang tải lên private...');
+              ptext.children[0].textContent = 'Kho Blob là Private, đang chuyển sang tải lên chế độ Private...';
+              usedAccess = 'private';
+              blobResult = await doUpload('private');
+            } else {
+              throw uploadErr;
             }
-          });
+          }
 
           console.log('[Admin] Tải lên Vercel Blob thành công URL:', blobResult.url);
 
@@ -678,7 +698,13 @@
           pbar.style.width = '100%';
           ptext.children[0].textContent = 'Tải lên hoàn tất! Đã lưu vĩnh viễn trên CDN!';
           ptext.children[1].textContent = '100%';
-          showToast(`Đã lưu bản mới nhất của ${targetFilename} vào Vercel Blob CDN vĩnh viễn!`);
+
+          if (usedAccess === 'private') {
+            showToast(`Đã lưu ${targetFilename} thành công! Lưu ý: Kho Blob hiện tại là Private.`, false);
+            alert(`✅ Tải lên ${targetFilename} thành công!\n\n⚠️ Lưu ý quan trọng:\nKho Blob Store của bạn trên Vercel hiện đang là loại 'Private'.\nĐể các người chơi tải trực tiếp từ CDN nhanh nhất và không tốn tài nguyên server, bạn nên tạo Blob Store mới với quyền 'Public' trên Vercel Dashboard.`);
+          } else {
+            showToast(`Đã lưu bản mới nhất của ${targetFilename} vào Vercel Blob CDN vĩnh viễn!`);
+          }
           loadStatus();
           return;
         }
