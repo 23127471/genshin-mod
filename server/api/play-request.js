@@ -31,10 +31,34 @@ module.exports = async (req, res) => {
   }
 
   const db = getDatabase();
+  const serverFiles = db.files || {};
   const clientVersion = (body && body.version) || '';
-  console.log(`[Play Request] Client version: ${clientVersion} | DB status: ${db.status}`);
+  const clientHashes = (body && body.client_hashes) || {};
 
-  // TH1: Máy chủ đang báo đợi bản cập nhật mới / bảo trì -> Chặn chơi
+  const clientExeHash = (clientHashes['breezi.exe'] || '').trim().toLowerCase();
+  const clientDllHash = (clientHashes['breezi.dll'] || '').trim().toLowerCase();
+
+  const outdated = [];
+
+  // So sánh SHA-256 của breezi.exe
+  if (serverFiles['breezi.exe'] && serverFiles['breezi.exe'].sha256) {
+    const srvExeHash = serverFiles['breezi.exe'].sha256.toLowerCase();
+    if (!clientExeHash || clientExeHash !== srvExeHash) {
+      outdated.push('breezi.exe');
+    }
+  }
+
+  // So sánh SHA-256 của breezi.dll
+  if (serverFiles['breezi.dll'] && serverFiles['breezi.dll'].sha256) {
+    const srvDllHash = serverFiles['breezi.dll'].sha256.toLowerCase();
+    if (!clientDllHash || clientDllHash !== srvDllHash) {
+      outdated.push('breezi.dll');
+    }
+  }
+
+  console.log(`[Play Request] Client version: ${clientVersion} | Outdated files: ${outdated.join(', ') || 'None'} | DB status: ${db.status}`);
+
+  // TH1: Máy chủ đang bật bảo trì toàn hệ thống -> Chặn chơi
   if (db.status === 'maintenance') {
     res.status(200).json({
       allow: false,
@@ -44,22 +68,26 @@ module.exports = async (req, res) => {
     return;
   }
 
-  // TH2: Máy chủ báo có bản cập nhật mới -> Bắt buộc cập nhật trước khi chơi
-  if (db.status === 'update_available') {
+  // TH2: Phát hiện tệp của người chơi chưa khớp mã băm mới nhất -> Bắt buộc cập nhật
+  if (outdated.length > 0) {
+    const fileListStr = outdated.join(' và ');
     res.status(200).json({
       allow: false,
       status: 'update_available',
+      needs_update: true,
+      outdated_files: outdated,
       latest_version: db.latest_version,
       changelog: db.changelog,
-      message: `Đã có bản cập nhật mới (${db.latest_version}). Vui lòng cập nhật trước khi vào game.`
+      message: `Phát hiện ${fileListStr} trên máy bạn chưa đúng bản mới nhất từ máy chủ (mã SHA-256 không khớp). Vui lòng nhấn CẬP NHẬT trước khi vào game.`
     });
     return;
   }
 
-  // TH3: Server OK -> Cho phép chơi
+  // TH3: Server OK & Mã băm khớp hoàn toàn -> Cho phép chơi
   res.status(200).json({
     allow: true,
     status: 'ok',
-    message: 'Xác thực thành công. Cho phép khởi chạy game!'
+    needs_update: false,
+    message: 'Xác thực mã băm SHA-256 thành công. Cho phép khởi chạy game!'
   });
 };

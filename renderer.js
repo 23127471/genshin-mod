@@ -239,6 +239,8 @@ function applyConfig(cfg) {
 // Server State Management
 let serverState = {
   status: 'ok',
+  needs_update: false,
+  outdated_files: [],
   latest_version: 'v1.0.3',
   maintenance_message: 'Máy chủ đang đợi bản cập nhật mới, hiện không thể vào game.',
   changelog: ''
@@ -261,11 +263,13 @@ function applyServerStatus(info) {
       dot.style.background = '#f59e0b';
       dot.style.boxShadow = '0 0 8px rgba(245, 158, 11, 0.8)';
     }
-  } else if (serverState.status === 'update_available') {
+  } else if (serverState.status === 'update_available' || serverState.needs_update === true) {
     btnText.textContent = 'CẬP NHẬT';
     btnPlay.classList.add('btn-update');
     btnPlay.classList.remove('btn-maintenance');
-    engineStatusText.textContent = `Đã có bản cập nhật mới (${serverState.latest_version || 'Mới nhất'})`;
+    const outdated = serverState.outdated_files || [];
+    const fileHint = outdated.length > 0 ? ` [${outdated.join(', ')}]` : '';
+    engineStatusText.textContent = `Đã có bản cập nhật mới${fileHint} - Mã SHA-256 chưa khớp`;
     readinessStatusText.textContent = 'Trạng thái: Cần cập nhật';
     readinessStatusText.style.color = '#60a5fa';
     if (dot) {
@@ -276,7 +280,7 @@ function applyServerStatus(info) {
     if (!isUpdating) {
       btnText.textContent = 'PLAY';
       btnPlay.classList.remove('btn-maintenance', 'btn-update');
-      engineStatusText.textContent = 'Game Engine Ready (Injector Connected)';
+      engineStatusText.textContent = 'Game Engine Ready (SHA-256 Verified)';
       readinessStatusText.textContent = 'Trạng thái: Sẵn sàng';
       readinessStatusText.style.color = 'var(--text-yellow)';
       if (dot) {
@@ -403,8 +407,8 @@ tabButtons.forEach(btn => {
 
 // Xử lý nút PLAY / CẬP NHẬT / BẢO TRÌ
 btnPlay.addEventListener('click', async () => {
-  // TH1: Người dùng nhấn "CẬP NHẬT" khi server báo đã có bản cập nhật mới
-  if (serverState.status === 'update_available') {
+  // TH1: Người dùng nhấn "CẬP NHẬT" khi server báo đã có bản cập nhật mới hoặc mã băm không khớp
+  if (serverState.status === 'update_available' || serverState.needs_update === true) {
     playSfx('launch');
     if (isUpdating) return;
     isUpdating = true;
@@ -412,15 +416,26 @@ btnPlay.addEventListener('click', async () => {
 
     const btnText = btnPlay.querySelector('.btn-play-text') || btnPlay;
     btnText.textContent = 'ĐANG TẢI...';
-    engineStatusText.textContent = `Đang kết nối máy chủ để tải breezi.dll và breezi.exe mới nhất...`;
-    showToast(`Bắt đầu tải bản cập nhật ${serverState.latest_version}...`, 'info');
+    const filesToGet = serverState.outdated_files && serverState.outdated_files.length > 0
+      ? serverState.outdated_files
+      : ['breezi.dll', 'breezi.exe'];
+
+    engineStatusText.textContent = `Đang kết nối máy chủ để tải ${filesToGet.join(', ')} mới nhất...`;
+    showToast(`Bắt đầu cập nhật tệp: ${filesToGet.join(', ')}...`, 'info');
 
     try {
-      const res = await api.downloadUpdate();
+      const res = await api.downloadUpdate(filesToGet);
       if (res.success) {
         showToast(res.message, 'success', 6000);
-        serverState.status = 'ok';
-        applyServerStatus({ status: 'ok' });
+        // Sau khi tải xong, kiểm tra lại ngay mã hash với máy chủ
+        const checkRes = await api.checkServerStatus();
+        if (checkRes && checkRes.connected !== false) {
+          applyServerStatus(checkRes);
+        } else {
+          serverState.status = 'ok';
+          serverState.needs_update = false;
+          applyServerStatus({ status: 'ok', needs_update: false });
+        }
         const progressFill = document.getElementById('progressFill');
         if (progressFill) progressFill.style.width = '100%';
       } else {

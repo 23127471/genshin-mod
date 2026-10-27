@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const { spawn } = require('child_process');
 
 let mainWindow;
@@ -29,6 +30,35 @@ function getBreeziExePath() {
 
 function getBreeziJsonPath() {
   return path.join(getLibDir(), 'breezi.json');
+}
+
+// Bộ nhớ đệm SHA-256 theo mtime và filesize để không tốn CPU tính toán liên tục
+let hashCache = {};
+
+function getFileSha256(filePath, filename) {
+  try {
+    if (!fs.existsSync(filePath)) return null;
+    const stat = fs.statSync(filePath);
+    const cached = hashCache[filename];
+    if (cached && cached.mtime === stat.mtimeMs && cached.size === stat.size && cached.hash) {
+      return cached.hash;
+    }
+    const buffer = fs.readFileSync(filePath);
+    const hash = crypto.createHash('sha256').update(buffer).digest('hex').toLowerCase();
+    hashCache[filename] = { mtime: stat.mtimeMs, size: stat.size, hash };
+    return hash;
+  } catch (e) {
+    console.error(`[Hash] Lỗi đọc mã băm của ${filename}:`, e.message);
+    return null;
+  }
+}
+
+function getLocalModHashes() {
+  const libDir = getLibDir();
+  return {
+    'breezi.exe': getFileSha256(path.join(libDir, 'breezi.exe'), 'breezi.exe'),
+    'breezi.dll': getFileSha256(path.join(libDir, 'breezi.dll'), 'breezi.dll')
+  };
 }
 
 // Đọc cấu hình từ config.ini
@@ -297,30 +327,49 @@ ipcMain.handle('close-window', () => {
   if (mainWindow) mainWindow.close();
 });
 
-// 1. Kiểm tra trạng thái máy chủ
+// 1. Kiểm tra trạng thái máy chủ & đối chiếu mã băm SHA-256
 ipcMain.handle('check-server-status', async () => {
   const config = readConfig();
   const serverUrl = (config.ServerUrl || 'https://genshin-mod.vercel.app').replace(/\/+$/, '');
+  const localHashes = getLocalModHashes();
+
   try {
-    const res = await fetch(`${serverUrl}/api/status`, { signal: AbortSignal.timeout(3000) });
+    const params = new URLSearchParams({
+      exe_hash: localHashes['breezi.exe'] || '',
+      dll_hash: localHashes['breezi.dll'] || ''
+    });
+    const res = await fetch(`${serverUrl}/api/status?${params.toString()}`, { signal: AbortSignal.timeout(4000) });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    return { connected: true, ...data };
+    return {
+      connected: true,
+      local_hashes: localHashes,
+      ...data
+    };
   } catch (err) {
-    return { connected: false, message: `Không thể kết nối đến máy chủ (${err.message})` };
+    return {
+      connected: false,
+      message: `Không thể kết nối đến máy chủ (${err.message})`,
+      local_hashes: localHashes
+    };
   }
 });
 
-// 2. Gửi yêu cầu quyền chơi game đến máy chủ
+// 2. Gửi yêu cầu quyền chơi game đến máy chủ (kèm đối chiếu mã băm SHA-256)
 ipcMain.handle('request-play', async () => {
   const config = readConfig();
   const serverUrl = (config.ServerUrl || 'https://genshin-mod.vercel.app').replace(/\/+$/, '');
+  const localHashes = getLocalModHashes();
+
   try {
     const res = await fetch(`${serverUrl}/api/play-request`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ version: 'v1.0.2' }),
-      signal: AbortSignal.timeout(4000)
+      body: JSON.stringify({
+        version: 'v1.0.2',
+        client_hashes: localHashes
+      }),
+      signal: AbortSignal.timeout(5000)
     });
     const data = await res.json();
     return data;
@@ -333,12 +382,19 @@ ipcMain.handle('request-play', async () => {
   }
 });
 
-// 3. Tải bản cập nhật mới nhất (breezi.dll và breezi.exe)
-ipcMain.handle('download-update', async () => {
+// 3. Tải bản cập nhật mới nhất (chỉ tải các file chưa khớp hoặc toàn bộ)
+ipcMain.handle('download-update', async (event, specificFiles) => {
   const config = readConfig();
   const serverUrl = (config.ServerUrl || 'https://genshin-mod.vercel.app').replace(/\/+$/, '');
   const libDir = getLibDir();
-  const filesToDownload = ['breezi.dll', 'breezi.exe'];
+
+  let filesToDownload = Array.isArray(specificFiles) && specificFiles.length > 0
+    ? specificFiles
+    : ['breezi.dll', 'breezi.exe'];
+
+  // Giới hạn chỉ tải breezi.dll và breezi.exe để đảm bảo an toàn
+  filesToDownload = filesToDownload.filter(f => ['breezi.dll', 'breezi.exe'].includes(f));
+  if (filesToDownload.length === 0) filesToDownload = ['breezi.dll', 'breezi.exe'];
 
   try {
     for (const filename of filesToDownload) {
@@ -372,12 +428,17 @@ ipcMain.handle('download-update', async () => {
       }
       fileStream.end();
       await new Promise(r => fileStream.on('finish', r));
-      console.log(`[Update] Đã tải xong ${filename}`);
+      console.log(`[Update] Đã tải xong và cập nhật ${filename}`);
     }
+
+    // Làm mới cache hash để tính lại ngay mã hash mới vừa tải về
+    hashCache = {};
+    const updatedHashes = getLocalModHashes();
+    console.log('[Update] Mã SHA-256 sau khi cập nhật:', updatedHashes);
 
     return {
       success: true,
-      message: 'Đã tải và cập nhật thành công breezi.dll và breezi.exe mới nhất!'
+      message: `Đã cập nhật thành công ${filesToDownload.join(', ')} mới nhất!`
     };
   } catch (err) {
     console.error('[Update Error]:', err);

@@ -267,7 +267,8 @@
         <span class="tag-single">Chỉ lưu duy nhất bản mới nhất</span>
       </div>
       <p class="desc" style="margin-bottom: 0;">
-        Khi bạn tải lên file mới, hệ thống sẽ tự động dọn dẹp và xóa bản cũ trong cơ sở dữ liệu. Nhờ cơ chế cắt nhỏ (Chunked Upload), bạn có thể tải lên tệp 45MB mà không bị lỗi giới hạn 4.5MB của Vercel.
+        Khi bạn tải lên file mới, hệ thống tự động tính mã băm <b>SHA-256</b> và ghi đè bản cũ trong cơ sở dữ liệu. Nhờ cơ chế cắt nhỏ (Chunked Upload), bạn có thể tải lên tệp 45MB mà không bị lỗi giới hạn 4.5MB của Vercel.<br>
+        <span style="color: #34d399;">🔒 <b>Cơ chế SHA-256 cho từng người chơi:</b> Bên launcher của mỗi người chơi sẽ tự động gửi mã băm của <code>breezi.dll</code> và <code>breezi.exe</code> trên máy họ lên. Ai đã cập nhật đúng mã băm mới nhất sẽ được chơi ngay, ai chưa cập nhật hoặc mã băm không khớp sẽ tự động nhận thông báo CẬP NHẬT.</span>
       </p>
 
       <div class="upload-grid">
@@ -316,13 +317,14 @@
             <tr>
               <th>Tên tệp</th>
               <th>Dung lượng</th>
+              <th>Mã băm SHA-256 (Mới nhất)</th>
               <th>Trạng thái lưu trữ</th>
               <th>Ngày cập nhật</th>
               <th>Thao tác</th>
             </tr>
           </thead>
           <tbody id="dbFilesList">
-            <tr><td colspan="5" style="text-align: center; color: var(--text-dim);">Đang tải dữ liệu database...</td></tr>
+            <tr><td colspan="6" style="text-align: center; color: var(--text-dim);">Đang tải dữ liệu database...</td></tr>
           </tbody>
         </table>
       </div>
@@ -433,10 +435,12 @@
         if (f) {
           const sizeMb = (f.size / (1024 * 1024)).toFixed(2);
           const dateStr = f.updated_at ? new Date(f.updated_at).toLocaleString('vi-VN') : 'Mặc định';
+          const shortHash = f.sha256 ? `${f.sha256.substring(0, 10)}...${f.sha256.substring(f.sha256.length - 8)}` : '--';
           html += `
             <tr>
               <td style="font-weight: 600; color: #f8fafc;">${f.filename}</td>
               <td style="color: #38bdf8;">${sizeMb} MB</td>
+              <td><code title="Click để sao chép: ${f.sha256 || ''}" onclick="navigator.clipboard.writeText('${f.sha256 || ''}'); alert('Đã sao chép SHA-256: ${f.sha256 || ''}');" style="background: #000; border: 1px solid #334155; padding: 3px 8px; border-radius: 4px; font-size: 11px; color: #34d399; font-family: monospace; cursor: pointer;">${shortHash} 📋</code></td>
               <td><span class="badge-latest">BẢN MỚI NHẤT</span></td>
               <td style="color: #94a3b8;">${dateStr}</td>
               <td><a href="/api/download?file=${f.filename}" class="btn-test-dl">Tải thử</a></td>
@@ -446,6 +450,7 @@
           html += `
             <tr>
               <td style="font-weight: 600; color: #f8fafc;">${k}</td>
+              <td style="color: #94a3b8;">--</td>
               <td style="color: #94a3b8;">--</td>
               <td style="color: #f59e0b;">Chưa có bản tải lên</td>
               <td style="color: #94a3b8;">--</td>

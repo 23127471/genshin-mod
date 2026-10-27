@@ -7,7 +7,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   launchGame: () => ipcRenderer.invoke('launch-game'),
   checkServerStatus: () => ipcRenderer.invoke('check-server-status'),
   requestPlay: () => ipcRenderer.invoke('request-play'),
-  downloadUpdate: () => ipcRenderer.invoke('download-update'),
+  downloadUpdate: (files) => ipcRenderer.invoke('download-update', files),
   onUpdateProgress: (callback) => {
     ipcRenderer.on('update-progress', (event, data) => callback(data));
   },
