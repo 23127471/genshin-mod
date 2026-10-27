@@ -270,6 +270,7 @@
         Khi bạn tải lên file mới, hệ thống tự động tính mã băm <b>SHA-256</b> và ghi đè bản cũ trong cơ sở dữ liệu. Nhờ cơ chế cắt nhỏ (Chunked Upload), bạn có thể tải lên tệp 45MB mà không bị lỗi giới hạn 4.5MB của Vercel.<br>
         <span style="color: #34d399;">🔒 <b>Cơ chế SHA-256 cho từng người chơi:</b> Bên launcher của mỗi người chơi sẽ tự động gửi mã băm của <code>breezi.dll</code> và <code>breezi.exe</code> trên máy họ lên. Ai đã cập nhật đúng mã băm mới nhất sẽ được chơi ngay, ai chưa cập nhật hoặc mã băm không khớp sẽ tự động nhận thông báo CẬP NHẬT.</span>
       </p>
+      <div id="blobStatusIndicator" style="margin-top: 10px; font-size: 12.5px;">Đang kiểm tra kết nối Vercel Blob CDN...</div>
 
       <div class="upload-grid">
         <!-- Card 1: breezi.dll -->
@@ -355,6 +356,7 @@
         loginView.style.display = 'none';
         adminContainer.style.display = 'flex';
         loadStatus();
+        checkBlobStorage();
       } else {
         loginView.style.display = 'flex';
         adminContainer.style.display = 'none';
@@ -509,7 +511,44 @@
       document.getElementById('nameExe').textContent = f ? `${f.name} (${(f.size/1024/1024).toFixed(1)}MB)` : 'Chưa chọn';
     });
 
-    // Chunked Upload Engine với xác thực Admin
+    let isBlobEnabledOnServer = false;
+    let vercelBlobClientUpload = null;
+
+    // Tự động nạp thư viện @vercel/blob/client từ CDN
+    (async () => {
+      try {
+        const mod = await import('https://esm.sh/@vercel/blob/client');
+        vercelBlobClientUpload = mod.upload;
+        console.log('[Admin] Đã nạp thành công @vercel/blob/client từ CDN');
+      } catch (e) {
+        console.warn('[Admin] Không thể nạp @vercel/blob/client:', e.message);
+      }
+    })();
+
+    // Kiểm tra cấu hình Blob trên server
+    async function checkBlobStorage() {
+      try {
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ action: 'check_blob_enabled' })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          isBlobEnabledOnServer = !!data.blobEnabled;
+          const statusText = document.getElementById('blobStatusIndicator');
+          if (statusText) {
+            if (isBlobEnabledOnServer) {
+              statusText.innerHTML = '<span style="color: #34d399; font-weight: 600;">☁️ Vercel Blob CDN: ĐÃ KẾT NỐI (Lưu trữ vĩnh viễn 100%)</span>';
+            } else {
+              statusText.innerHTML = '<span style="color: #fbbf24; font-weight: 600;">⚠️ Vercel Blob chưa kích hoạt (Chưa tạo Blob Store trên Vercel Dashboard)</span>';
+            }
+          }
+        }
+      } catch (_) {}
+    }
+
+    // Engine tải lên tệp mới nhất
     async function startChunkedUpload(targetFilename, inputId, pboxId, pbarId, ptextId, btnId) {
       const input = document.getElementById(inputId);
       const file = input.files[0];
@@ -526,20 +565,83 @@
       pbox.style.display = 'block';
       pbar.style.width = '0%';
       btn.disabled = true;
-      btn.textContent = 'Đang tải lên...';
+      btn.textContent = 'Đang xử lý...';
 
-      const uploadId = 'up_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
-      const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
       const latest_version = document.getElementById('latestVersion').value.trim();
       const changelog = document.getElementById('changelog').value.trim();
 
       try {
+        // Bước 1: Tính toán mã băm SHA-256 ngay trong trình duyệt
+        ptext.children[0].textContent = 'Đang tính mã SHA-256 bằng Web Crypto...';
+        ptext.children[1].textContent = '...';
+        const fileBuffer = await file.arrayBuffer();
+        const hashBuffer = await crypto.subtle.digest('SHA-256', fileBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const sha256 = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        console.log(`[Admin] SHA-256 của ${targetFilename}: ${sha256}`);
+
+        // Bước 2: Tải lên Vercel Blob CDN nếu có hỗ trợ
+        if (isBlobEnabledOnServer && vercelBlobClientUpload) {
+          ptext.children[0].textContent = 'Đang tải trực tiếp lên Vercel Blob CDN (Không giới hạn dung lượng)...';
+          btn.textContent = 'Đang tải lên CDN...';
+
+          const blobResult = await vercelBlobClientUpload(targetFilename, file, {
+            access: 'public',
+            handleUploadUrl: '/api/blob-upload',
+            headers: getAuthHeaders(),
+            onUploadProgress: (progressEvent) => {
+              const pct = Math.round(progressEvent.percentage);
+              pbar.style.width = pct + '%';
+              ptext.children[0].textContent = `Đang tải lên CDN: ${pct}% (${(progressEvent.loaded / 1024 / 1024).toFixed(1)}MB / ${(progressEvent.total / 1024 / 1024).toFixed(1)}MB)`;
+              ptext.children[1].textContent = pct + '%';
+            }
+          });
+
+          console.log('[Admin] Tải lên Vercel Blob thành công URL:', blobResult.url);
+
+          // Bước 3: Đăng ký thông tin vào database
+          ptext.children[0].textContent = 'Đang cập nhật cơ sở dữ liệu...';
+          const regRes = await fetch('/api/upload', {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({
+              action: 'register_blob',
+              filename: targetFilename,
+              blobUrl: blobResult.url,
+              size: file.size,
+              sha256: sha256,
+              newVersion: latest_version,
+              changelog: changelog
+            })
+          });
+
+          if (regRes.status === 401) {
+            throw new Error('Chưa đăng nhập hoặc phiên làm việc đã hết hạn!');
+          }
+
+          const regData = await regRes.json();
+          if (!regData.success) {
+            throw new Error(regData.error || 'Lỗi lưu vào database');
+          }
+
+          pbar.style.width = '100%';
+          ptext.children[0].textContent = 'Tải lên hoàn tất! Đã lưu vĩnh viễn trên CDN!';
+          ptext.children[1].textContent = '100%';
+          showToast(`Đã lưu bản mới nhất của ${targetFilename} vào Vercel Blob CDN vĩnh viễn!`);
+          loadStatus();
+          return;
+        }
+
+        // Bước 2b: Fallback chunked upload (nếu chưa cấu hình Vercel Blob, chạy trên local)
+        const CHUNK_SIZE = 1.5 * 1024 * 1024; // 1.5MB an toàn
+        const uploadId = 'up_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+        const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+
         for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
           const start = chunkIndex * CHUNK_SIZE;
           const end = Math.min(start + CHUNK_SIZE, file.size);
           const chunkBlob = file.slice(start, end);
 
-          // Convert Blob to base64
           const base64Data = await new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = () => {
@@ -550,7 +652,6 @@
             reader.readAsDataURL(chunkBlob);
           });
 
-          // Gửi chunk lên server kèm Authorization header
           const chunkRes = await fetch('/api/upload', {
             method: 'POST',
             headers: getAuthHeaders(),
@@ -563,10 +664,8 @@
             })
           });
 
-          if (chunkRes.status === 401) {
-            throw new Error('Chưa đăng nhập hoặc phiên làm việc đã hết hạn!');
-          }
-          if (!chunkRes.ok) throw new Error(`Lỗi gửi chunk ${chunkIndex + 1}`);
+          if (chunkRes.status === 401) throw new Error('Chưa đăng nhập hoặc phiên làm việc đã hết hạn!');
+          if (!chunkRes.ok) throw new Error(`Lỗi gửi chunk ${chunkIndex + 1}/${totalChunks}`);
 
           const pct = Math.round(((chunkIndex + 1) / totalChunks) * 90);
           pbar.style.width = pct + '%';
@@ -574,7 +673,6 @@
           ptext.children[1].textContent = pct + '%';
         }
 
-        // Bước cuối: Yêu cầu server ghép các chunk và lưu vào database
         ptext.children[0].textContent = 'Đang ghép file và lưu vào database...';
         const finalRes = await fetch('/api/upload', {
           method: 'POST',
@@ -589,23 +687,22 @@
           })
         });
 
-        if (finalRes.status === 401) {
-          throw new Error('Chưa đăng nhập hoặc phiên làm việc đã hết hạn!');
-        }
+        if (finalRes.status === 401) throw new Error('Chưa đăng nhập hoặc phiên làm việc đã hết hạn!');
 
         const finalData = await finalRes.json();
         if (finalData.success) {
           pbar.style.width = '100%';
           ptext.children[0].textContent = 'Đã lưu bản mới nhất vào database!';
           ptext.children[1].textContent = '100%';
-          showToast(`Đã lưu bản mới nhất của ${targetFilename} vào Database (Bản cũ đã xóa)!`);
+          showToast(`Đã lưu bản mới nhất của ${targetFilename} vào Database!`);
           loadStatus();
         } else {
           throw new Error(finalData.error || 'Ghép file thất bại');
         }
       } catch (err) {
-        alert('Lỗi tải lên: ' + err.message);
-        ptext.children[0].textContent = 'Lỗi tải lên';
+        console.error('[Upload Error]:', err);
+        alert('Lỗi tải lên: ' + (err.message || 'Không xác định'));
+        ptext.children[0].textContent = 'Lỗi: ' + (err.message || 'Thất bại');
       } finally {
         btn.disabled = false;
         btn.textContent = 'Tải lên & Lưu bản mới nhất';

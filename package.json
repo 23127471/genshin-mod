@@ -21,7 +21,9 @@
       "target": [
         {
           "target": "portable",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ]
     },
@@ -48,5 +50,8 @@
   "license": "MIT",
   "devDependencies": {
     "electron": "^45.0.0"
+  },
+  "dependencies": {
+    "@vercel/blob": "^2.8.2"
   }
 }

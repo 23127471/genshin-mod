@@ -14,6 +14,7 @@ const handleDownload = require('./api/download');
 const handleUpload = require('./api/upload');
 const handleAdminStatus = require('./api/admin-status');
 const handleLogin = require('./api/login');
+const handleBlobUpload = require('./api/blob-upload');
 
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
@@ -91,6 +92,11 @@ const server = http.createServer(async (req, res) => {
   // 5. API: Upload tệp mới nhất với Chunking (POST /api/upload)
   if (pathname === '/api/upload') {
     return handleUpload(req, res);
+  }
+
+  // 5.1 API: Vercel Blob Client Upload Token (POST /api/blob-upload)
+  if (pathname === '/api/blob-upload') {
+    return handleBlobUpload(req, res);
   }
 
   // 6. API: Quản trị viên cập nhật trạng thái (POST /api/admin-status hoặc POST /api/admin/set-status)

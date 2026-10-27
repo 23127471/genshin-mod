@@ -85,7 +85,50 @@ module.exports = async (req, res) => {
       return;
     }
 
-    // 3. Hỗ trợ upload trực tiếp nếu file nhỏ (< 4MB như breezi.exe)
+    // 3. Đăng ký tệp sau khi Client Upload trực tiếp lên Vercel Blob thành công
+    if (action === 'register_blob' && filename && body.blobUrl) {
+      const db = getDatabase();
+      if (!db.files) db.files = {};
+
+      const fileSize = Number(body.size) || 0;
+      const fileHash = (body.sha256 || '').trim().toLowerCase();
+
+      db.files[filename] = {
+        filename,
+        size: fileSize,
+        sha256: fileHash,
+        updated_at: new Date().toISOString(),
+        blobUrl: body.blobUrl,
+        download_url: `/api/download?file=${filename}`
+      };
+
+      if (newVersion) db.latest_version = newVersion.trim();
+      if (changelog) db.changelog = changelog.trim();
+      db.status = 'update_available';
+      saveDatabase(db);
+
+      console.log(`[Upload] Đã đăng ký tệp ${filename} từ Vercel Blob: ${body.blobUrl} (${(fileSize/1024/1024).toFixed(2)} MB, hash: ${fileHash.substring(0, 10)}...)`);
+
+      res.status(200).json({
+        success: true,
+        file: db.files[filename],
+        status: db.status,
+        latest_version: db.latest_version,
+        message: `Đã lưu và cập nhật thành công bản mới nhất của ${filename} lên Vercel Blob CDN!`
+      });
+      return;
+    }
+
+    // 4. Kiểm tra xem máy chủ có cấu hình Vercel Blob Storage không
+    if (action === 'check_blob_enabled') {
+      const hasToken = !!process.env.BLOB_READ_WRITE_TOKEN;
+      res.status(200).json({
+        blobEnabled: hasToken
+      });
+      return;
+    }
+
+    // 5. Hỗ trợ upload trực tiếp nếu file nhỏ (< 4MB như breezi.exe)
     if (action === 'direct' && filename && chunkData) {
       const buffer = Buffer.from(chunkData, 'base64');
       const fileRecord = await saveLatestFile(filename, buffer);
@@ -103,7 +146,7 @@ module.exports = async (req, res) => {
       return;
     }
 
-    res.status(400).json({ error: 'Action không hợp lệ. Sử dụng "chunk", "assemble" hoặc "direct"' });
+    res.status(400).json({ error: 'Action không hợp lệ. Sử dụng "register_blob", "chunk", "assemble" hoặc "direct"' });
   } catch (err) {
     console.error('[Upload Error]:', err);
     res.status(500).json({ success: false, error: err.message });
